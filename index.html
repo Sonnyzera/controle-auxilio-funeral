@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <script>
+        // Este script verifica se o usuário está logado.
+        // Ele deve ser a primeira coisa dentro do <head>.
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            // Se não houver token, redireciona para a página de login.
+            // Construímos a URL completa para garantir a compatibilidade com todos os navegadores.
+            window.location.href = window.location.origin + '/login.html';
+        }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de CSV - Auxílio Funeral</title>
