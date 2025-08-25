@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <script>
-        // Verificação de login (sem alterações)
+        // Reativa a verificação de login
         const token = localStorage.getItem('auth_token');
         if (!token) {
             window.location.href = window.location.origin + '/login.html';
@@ -13,12 +13,15 @@
     <title>Controle de Dados - Auxílio Funeral</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Biblioteca para gerar arquivos .xlsx (Excel) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .hidden { display: none; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -26,13 +29,33 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-700">Controle e Exportação de Dados</h1>
-            <p class="text-md text-gray-500 mt-1">Os dados agora são salvos na nuvem.</p>
+            <p class="text-md text-gray-500 mt-1">Dados salvos e acessados diretamente da nuvem.</p>
         </header>
 
         <!-- Formulário -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 class="text-xl font-semibold mb-4 border-b pb-2">Adicionar Novo Registro</h2>
             <form id="data-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="md:col-span-4">
+                    <label class="block text-sm font-medium text-gray-600 mb-2">Tipo de Registro</label>
+                    <div class="flex items-center space-x-4">
+                        <label class="flex items-center">
+                            <input type="radio" name="tipo" value="Urna" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" checked>
+                            <span class="ml-2 text-sm text-gray-700">Urna</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="tipo" value="Translado" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                            <span class="ml-2 text-sm text-gray-700">Translado</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="origem-container">
+                    <label for="origem-solicitacao" class="block text-sm font-medium text-gray-600">Origem da Solicitação</label>
+                    <select id="origem-solicitacao" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
+                        <option>UPA ITINGA</option>
+                        <option>SEMDESC</option>
+                    </select>
+                </div>
                 <div>
                     <label for="data-solicitacao" class="block text-sm font-medium text-gray-600">Data Solicitação</label>
                     <input type="date" id="data-solicitacao" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
@@ -43,29 +66,47 @@
                 </div>
                 <div>
                     <label for="cpf-requerente" class="block text-sm font-medium text-gray-600">CPF (Requerente)</label>
-                    <input type="text" id="cpf-requerente" placeholder="000.000.000-00" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                    <input type="text" id="cpf-requerente" placeholder="000.000.000-00" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
+                </div>
+                 <div>
+                    <label for="telefone-requerente" class="block text-sm font-medium text-gray-600">Telefone</label>
+                    <input type="tel" id="telefone-requerente" placeholder="(00) 00000-0000" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
                 </div>
                  <div>
                     <label for="falecido" class="block text-sm font-medium text-gray-600">Falecido(a)</label>
                     <input type="text" id="falecido" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
                 </div>
                 <div>
-                    <label for="cpf-rg-falecido" class="block text-sm font-medium text-gray-600">CPF/RG (Falecido)</label>
-                    <input type="text" id="cpf-rg-falecido" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                    <label for="idade-falecido" class="block text-sm font-medium text-gray-600">Idade (Falecido)</label>
+                    <input type="number" id="idade-falecido" min="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
+                </div>
+                <div class="md:col-span-2 grid grid-cols-2 gap-2">
+                    <div>
+                        <label for="tipo-documento-falecido" class="block text-sm font-medium text-gray-600">Documento</label>
+                        <select id="tipo-documento-falecido" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
+                            <option value="CPF">CPF</option>
+                            <option value="RG">RG</option>
+                            <option value="Certidao">Certidão Nasc.</option>
+                        </select>
+                    </div>
+                    <div>
+                         <label for="documento-falecido" class="block text-sm font-medium text-gray-600">Número</label>
+                        <input type="text" id="documento-falecido" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
+                    </div>
                 </div>
                 <div>
                     <label for="data-obito" class="block text-sm font-medium text-gray-600">Data do Óbito</label>
-                    <input type="date" id="data-obito" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                    <input type="date" id="data-obito" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
                 </div>
-                <div>
-                    <label for="onibus" class="block text-sm font-medium text-gray-600">Ônibus</label>
-                    <input type="number" id="onibus" min="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                <div class="col-span-1">
+                    <label for="onibus" class="block text-sm font-medium text-gray-600">Qtd. de Ônibus</label>
+                    <input type="number" id="onibus" min="0" placeholder="Qtd" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
                 </div>
                 <div>
                     <label for="valor" class="block text-sm font-medium text-gray-600">Valor</label>
-                    <input type="number" id="valor" step="0.01" min="0" placeholder="0.00" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                    <input type="number" id="valor" step="0.01" min="0" placeholder="0.00" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
                 </div>
-                <div class="md:col-span-2 lg:col-span-4 flex justify-end items-end">
+                <div class="md:col-span-4 flex justify-end items-end">
                     <button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-indigo-700">
                         Adicionar Registro
                     </button>
@@ -75,29 +116,53 @@
 
         <!-- Tabela de Dados -->
         <div class="bg-white p-6 rounded-lg shadow-md">
-             <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+             <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-4 mb-4">
                 <h2 class="text-xl font-semibold">Registros Salvos</h2>
-                <button id="export-csv" class="w-full sm:w-auto mt-4 sm:mt-0 bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-green-700 disabled:bg-gray-400">
-                    Exportar para CSV
-                </button>
+                <div class="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-2">
+                    <div class="w-full sm:w-auto flex items-center gap-2">
+                        <select id="month-filter" class="w-full border-gray-300 rounded-md shadow-sm p-2">
+                            <option value="1">Janeiro</option>
+                            <option value="2">Fevereiro</option>
+                            <option value="3">Março</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Maio</option>
+                            <option value="6">Junho</option>
+                            <option value="7">Julho</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Setembro</option>
+                            <option value="10">Outubro</option>
+                            <option value="11">Novembro</option>
+                            <option value="12">Dezembro</option>
+                        </select>
+                        <input type="number" id="year-filter" placeholder="Ano" class="border-gray-300 rounded-md shadow-sm p-2 w-24">
+                    </div>
+                    <div class="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
+                        <button id="export-urna" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 disabled:bg-gray-400">
+                            Exportar Urnas (.xlsx)
+                        </button>
+                        <button id="export-translado" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-green-700 disabled:bg-gray-400">
+                            Exportar Translados (.xlsx)
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Origem</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Solic.</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Requerente</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Falecido(a)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Óbito</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Idade</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ação</th>
                         </tr>
                     </thead>
                     <tbody id="data-table-body" class="bg-white divide-y divide-gray-200">
-                        <!-- Linhas serão inseridas aqui -->
                     </tbody>
                 </table>
-                 <p id="no-data-message" class="text-center text-gray-500 py-8">Nenhum registro encontrado.</p>
+                 <p id="no-data-message" class="text-center text-gray-500 py-8">Carregando dados...</p>
             </div>
         </div>
     </div>
@@ -106,24 +171,28 @@
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('data-form');
             const tableBody = document.getElementById('data-table-body');
-            const exportButton = document.getElementById('export-csv');
+            const exportUrnaBtn = document.getElementById('export-urna');
+            const exportTransladoBtn = document.getElementById('export-translado');
             const noDataMessage = document.getElementById('no-data-message');
+            const tipoRadios = document.querySelectorAll('input[name="tipo"]');
+            const origemContainer = document.getElementById('origem-container');
+            const origemSelect = document.getElementById('origem-solicitacao');
+            const monthFilter = document.getElementById('month-filter');
+            const yearFilter = document.getElementById('year-filter');
+            const cpfRequerenteInput = document.getElementById('cpf-requerente');
+            const telefoneRequerenteInput = document.getElementById('telefone-requerente');
+            const tipoDocumentoFalecidoSelect = document.getElementById('tipo-documento-falecido');
+            const documentoFalecidoInput = document.getElementById('documento-falecido');
             
-            // URL base da nossa API no Worker
+            // URL da API do Worker
             const apiUrl = 'https://empty-breeze-e336.lucas-547.workers.dev/api/registros';
-
-            // Array para guardar os dados carregados do servidor
             let dataStore = [];
 
-            // --- FUNÇÕES DE COMUNICAÇÃO COM A API ---
-
-            // Função para carregar os dados do servidor
+            // --- FUNÇÕES DE API ---
             const carregarDados = async () => {
                 try {
                     const response = await fetch(apiUrl);
-                    if (!response.ok) {
-                        throw new Error('Falha ao carregar dados do servidor.');
-                    }
+                    if (!response.ok) throw new Error('Falha ao carregar dados.');
                     dataStore = await response.json();
                     renderTable();
                 } catch (error) {
@@ -132,7 +201,6 @@
                 }
             };
 
-            // Função para adicionar um novo registro
             const adicionarRegistro = async (novoRegistro) => {
                 try {
                     const response = await fetch(apiUrl, {
@@ -140,58 +208,86 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(novoRegistro)
                     });
-                    if (!response.ok) {
-                        throw new Error('Falha ao salvar o registro.');
-                    }
-                    await carregarDados(); // Recarrega os dados para mostrar o novo item
+                    if (!response.ok) throw new Error('Falha ao salvar o registro.');
+                    await carregarDados();
                 } catch (error) {
                     console.error('Erro:', error);
                     alert('Não foi possível salvar o registro.');
                 }
             };
 
-            // Função para deletar um registro
             const deletarRegistro = async (id) => {
-                 if (!confirm('Tem certeza que deseja excluir este registro?')) {
-                    return;
-                }
+                 if (!confirm('Tem certeza que deseja excluir este registro?')) return;
                 try {
-                    const response = await fetch(`${apiUrl}/${id}`, {
-                        method: 'DELETE'
-                    });
-                    if (!response.ok) {
-                        throw new Error('Falha ao deletar o registro.');
-                    }
-                    await carregarDados(); // Recarrega os dados
+                    const response = await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+                    if (!response.ok) throw new Error('Falha ao deletar o registro.');
+                    await carregarDados();
                 } catch (error) {
                     console.error('Erro:', error);
                     alert('Não foi possível deletar o registro.');
                 }
             };
+            
+            // --- MÁSCARAS E LÓGICA DA UI ---
+            const applyMask = (event) => {
+                let value = event.target.value.replace(/\D/g, '');
+                const inputId = event.target.id;
+                const docType = tipoDocumentoFalecidoSelect.value;
+                if (inputId === 'cpf-requerente' || (inputId === 'documento-falecido' && docType === 'CPF')) {
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                    event.target.value = value.slice(0, 14);
+                } else if (inputId === 'telefone-requerente') {
+                    value = value.replace(/^(\d{2})(\d)/g, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2');
+                    event.target.value = value.slice(0, 15);
+                } else if (inputId === 'documento-falecido') {
+                    event.target.value = value.slice(0, docType === 'RG' ? 15 : 32);
+                }
+            };
 
-            // --- FUNÇÕES DE RENDERIZAÇÃO E EVENTOS ---
+            const updateFalecidoDocPlaceholder = () => {
+                documentoFalecidoInput.value = '';
+                documentoFalecidoInput.placeholder = tipoDocumentoFalecidoSelect.value === 'CPF' ? '000.000.000-00' : 'Apenas números';
+            };
+
+            cpfRequerenteInput.addEventListener('input', applyMask);
+            telefoneRequerenteInput.addEventListener('input', applyMask);
+            documentoFalecidoInput.addEventListener('input', applyMask);
+            tipoDocumentoFalecidoSelect.addEventListener('change', updateFalecidoDocPlaceholder);
+
+            const handleTipoChange = () => {
+                const tipoSelecionado = document.querySelector('input[name="tipo"]:checked').value;
+                origemSelect.innerHTML = tipoSelecionado === 'Urna' ? '<option>UPA ITINGA</option><option>SEMDESC</option>' : '<option>SEMDESC</option>';
+            };
+
+            const updateExportButtons = () => {
+                exportUrnaBtn.disabled = !dataStore.some(d => d.tipo === 'Urna');
+                exportTransladoBtn.disabled = !dataStore.some(d => d.tipo === 'Translado');
+            };
+            
+            const setInitialDateFilters = () => {
+                const today = new Date();
+                monthFilter.value = today.getMonth() + 1;
+                yearFilter.value = today.getFullYear();
+            };
 
             const renderTable = () => {
                 tableBody.innerHTML = '';
                 if (dataStore.length === 0) {
+                    noDataMessage.textContent = 'Nenhum registro encontrado.';
                     noDataMessage.style.display = 'block';
-                    exportButton.disabled = true;
                 } else {
                     noDataMessage.style.display = 'none';
-                    exportButton.disabled = false;
                     dataStore.forEach(rowData => {
                         const row = document.createElement('tr');
                         row.className = 'hover:bg-gray-50';
-                        
                         const formatDate = (dateStr) => dateStr ? new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR') : '';
-                        const formatValue = (value) => (value || value === 0) ? parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '';
-
                         row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">${rowData.tipo}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${rowData.origemSolicitacao}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(rowData.dataSolicitacao)}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${rowData.requerente}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${rowData.falecido}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(rowData.dataObito)}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatValue(rowData.valor)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${rowData.idadeFalecido || ''}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <button data-id="${rowData.id}" class="text-red-600 hover:text-red-900 delete-btn">Excluir</button>
                             </td>
@@ -199,22 +295,30 @@
                         tableBody.appendChild(row);
                     });
                 }
+                updateExportButtons();
             };
 
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const novoRegistro = {
+                    tipo: document.querySelector('input[name="tipo"]:checked').value,
+                    origemSolicitacao: origemSelect.value,
                     dataSolicitacao: document.getElementById('data-solicitacao').value,
                     requerente: document.getElementById('requerente').value,
                     cpfRequerente: document.getElementById('cpf-requerente').value,
+                    telefoneRequerente: document.getElementById('telefone-requerente').value,
                     falecido: document.getElementById('falecido').value,
-                    cpfRgFalecido: document.getElementById('cpf-rg-falecido').value,
+                    idadeFalecido: document.getElementById('idade-falecido').value,
+                    tipoDocumentoFalecido: document.getElementById('tipo-documento-falecido').value,
+                    documentoFalecido: document.getElementById('documento-falecido').value,
                     dataObito: document.getElementById('data-obito').value,
-                    onibus: parseInt(document.getElementById('onibus').value) || null,
-                    valor: parseFloat(document.getElementById('valor').value) || null
+                    onibus: document.getElementById('onibus').value,
+                    valor: document.getElementById('valor').value
                 };
                 adicionarRegistro(novoRegistro);
                 form.reset();
+                handleTipoChange();
+                updateFalecidoDocPlaceholder();
             });
 
             tableBody.addEventListener('click', (e) => {
@@ -224,33 +328,55 @@
                 }
             });
             
-            exportButton.addEventListener('click', () => {
-                if (dataStore.length === 0) return;
-                const headers = ['ID', 'Data Solicitação', 'Requerente', 'CPF Requerente', 'Falecido', 'CPF/RG Falecido', 'Data Óbito', 'Ônibus', 'Valor'];
-                const csvRows = dataStore.map(row => [
-                    row.id,
-                    row.dataSolicitacao,
-                    `"${(row.requerente || '').replace(/"/g, '""')}"`,
-                    `"${row.cpfRequerente || ''}"`,
-                    `"${(row.falecido || '').replace(/"/g, '""')}"`,
-                    `"${row.cpfRgFalecido || ''}"`,
-                    row.dataObito,
-                    row.onibus,
-                    (row.valor || '').toString().replace('.', ',')
-                ].join(';'));
-                const csvString = [headers.join(';'), ...csvRows].join('\n');
-                const blob = new Blob([`\uFEFF${csvString}`], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', 'relatorio_auxilio_funeral.csv');
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            });
+            const exportToXLSX = (tipo) => {
+                const selectedMonth = parseInt(monthFilter.value, 10);
+                const selectedYear = parseInt(yearFilter.value, 10);
 
-            // Carrega os dados iniciais ao abrir a página
+                if (!selectedYear || selectedYear.toString().length !== 4) {
+                    alert('Por favor, insira um ano válido com 4 dígitos.');
+                    return;
+                }
+
+                const dataToExport = dataStore.filter(row => {
+                    if (!row.dataSolicitacao || row.tipo !== tipo) return false;
+                    const rowDate = new Date(row.dataSolicitacao + 'T00:00:00');
+                    return rowDate.getMonth() + 1 === selectedMonth && rowDate.getFullYear() === selectedYear;
+                });
+
+                if (dataToExport.length === 0) {
+                    alert(`Nenhum registro do tipo "${tipo}" encontrado para ${selectedMonth}/${selectedYear}.`);
+                    return;
+                }
+
+                const mappedData = dataToExport.map(row => ({
+                    'Tipo': row.tipo,
+                    'Origem da Solicitação': row.origemSolicitacao,
+                    'Data da Solicitação': row.dataSolicitacao,
+                    'Requerente': row.requerente,
+                    'CPF do Requerente': row.cpfRequerente,
+                    'Telefone do Requerente': row.telefoneRequerente,
+                    'Falecido(a)': row.falecido,
+                    'Idade do Falecido': row.idadeFalecido,
+                    'Tipo Documento Falecido': row.tipoDocumentoFalecido,
+                    'Documento Falecido': row.documentoFalecido,
+                    'Data do Óbito': row.dataObito,
+                    'Qtd. de Ônibus': row.onibus,
+                    'Valor': row.valor
+                }));
+
+                const worksheet = XLSX.utils.json_to_sheet(mappedData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, tipo);
+                XLSX.writeFile(workbook, `Relatorio_${tipo}_${selectedMonth}-${selectedYear}.xlsx`);
+            };
+
+            exportUrnaBtn.addEventListener('click', () => exportToXLSX('Urna'));
+            exportTransladoBtn.addEventListener('click', () => exportToXLSX('Translado'));
+
+            tipoRadios.forEach(radio => radio.addEventListener('change', handleTipoChange));
+            handleTipoChange();
+            setInitialDateFilters();
+            updateFalecidoDocPlaceholder();
             carregarDados();
         });
     </script>
