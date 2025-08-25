@@ -2,43 +2,23 @@
 <html lang="pt-BR">
 <head>
     <script>
-        // Este script verifica se o usuário está logado.
-        // Ele deve ser a primeira coisa dentro do <head>.
+        // Verificação de login (sem alterações)
         const token = localStorage.getItem('auth_token');
         if (!token) {
-            // Se não houver token, redireciona para a página de login.
-            // Construímos a URL completa para garantir a compatibilidade com todos os navegadores.
             window.location.href = window.location.origin + '/login.html';
         }
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de CSV - Auxílio Funeral</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Controle de Dados - Auxílio Funeral</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom styles */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Custom scrollbar for better aesthetics */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -46,59 +26,58 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-700">Controle e Exportação de Dados</h1>
-            <p class="text-md text-gray-500 mt-1">Preencha o formulário para adicionar registros e exporte como CSV.</p>
+            <p class="text-md text-gray-500 mt-1">Os dados agora são salvos na nuvem.</p>
         </header>
 
-        <!-- Form Section -->
+        <!-- Formulário -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 class="text-xl font-semibold mb-4 border-b pb-2">Adicionar Novo Registro</h2>
             <form id="data-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Form fields based on the provided image -->
                 <div>
                     <label for="data-solicitacao" class="block text-sm font-medium text-gray-600">Data Solicitação</label>
-                    <input type="date" id="data-solicitacao" name="data-solicitacao" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2" required>
+                    <input type="date" id="data-solicitacao" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
                 </div>
                 <div>
                     <label for="requerente" class="block text-sm font-medium text-gray-600">Requerente</label>
-                    <input type="text" id="requerente" name="requerente" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2" required>
+                    <input type="text" id="requerente" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
                 </div>
                 <div>
                     <label for="cpf-requerente" class="block text-sm font-medium text-gray-600">CPF (Requerente)</label>
-                    <input type="text" id="cpf-requerente" name="cpf-requerente" placeholder="000.000.000-00" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2">
+                    <input type="text" id="cpf-requerente" placeholder="000.000.000-00" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
                 </div>
                  <div>
                     <label for="falecido" class="block text-sm font-medium text-gray-600">Falecido(a)</label>
-                    <input type="text" id="falecido" name="falecido" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2" required>
+                    <input type="text" id="falecido" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
                 </div>
                 <div>
                     <label for="cpf-rg-falecido" class="block text-sm font-medium text-gray-600">CPF/RG (Falecido)</label>
-                    <input type="text" id="cpf-rg-falecido" name="cpf-rg-falecido" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2">
+                    <input type="text" id="cpf-rg-falecido" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
                 </div>
                 <div>
                     <label for="data-obito" class="block text-sm font-medium text-gray-600">Data do Óbito</label>
-                    <input type="date" id="data-obito" name="data-obito" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2">
+                    <input type="date" id="data-obito" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
                 </div>
                 <div>
                     <label for="onibus" class="block text-sm font-medium text-gray-600">Ônibus</label>
-                    <input type="number" id="onibus" name="onibus" min="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2">
+                    <input type="number" id="onibus" min="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
                 </div>
                 <div>
                     <label for="valor" class="block text-sm font-medium text-gray-600">Valor</label>
-                    <input type="number" id="valor" name="valor" step="0.01" min="0" placeholder="0.00" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2">
+                    <input type="number" id="valor" step="0.01" min="0" placeholder="0.00" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
                 </div>
                 <div class="md:col-span-2 lg:col-span-4 flex justify-end items-end">
-                    <button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                    <button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-indigo-700">
                         Adicionar Registro
                     </button>
                 </div>
             </form>
         </div>
 
-        <!-- Data Table Section -->
+        <!-- Tabela de Dados -->
         <div class="bg-white p-6 rounded-lg shadow-md">
              <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold">Registros Adicionados</h2>
-                <button id="export-csv" class="w-full sm:w-auto mt-4 sm:mt-0 bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                <h2 class="text-xl font-semibold">Registros Salvos</h2>
+                <button id="export-csv" class="w-full sm:w-auto mt-4 sm:mt-0 bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-green-700 disabled:bg-gray-400">
                     Exportar para CSV
                 </button>
             </div>
@@ -106,94 +85,115 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nº</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Solic.</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requerente</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Falecido(a)</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF/RG</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Óbito</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ônibus</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Solic.</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Requerente</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Falecido(a)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Óbito</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ação</th>
                         </tr>
                     </thead>
                     <tbody id="data-table-body" class="bg-white divide-y divide-gray-200">
-                        <!-- Rows will be inserted here by JavaScript -->
+                        <!-- Linhas serão inseridas aqui -->
                     </tbody>
                 </table>
-                 <p id="no-data-message" class="text-center text-gray-500 py-8">Nenhum registro adicionado ainda.</p>
+                 <p id="no-data-message" class="text-center text-gray-500 py-8">Nenhum registro encontrado.</p>
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // DOM element references
             const form = document.getElementById('data-form');
             const tableBody = document.getElementById('data-table-body');
             const exportButton = document.getElementById('export-csv');
             const noDataMessage = document.getElementById('no-data-message');
-            const cpfInput = document.getElementById('cpf-requerente');
             
-            // Key for localStorage
-            const STORAGE_KEY = 'funeralAidData';
+            // URL base da nossa API no Worker
+            const apiUrl = 'https://empty-breeze-e336.lucas-547.workers.dev/api/registros';
 
-            // Load data from localStorage or initialize as empty array
-            let dataStore = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            // Array para guardar os dados carregados do servidor
+            let dataStore = [];
 
-            // Function to save data to localStorage
-            const saveData = () => {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(dataStore));
+            // --- FUNÇÕES DE COMUNICAÇÃO COM A API ---
+
+            // Função para carregar os dados do servidor
+            const carregarDados = async () => {
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        throw new Error('Falha ao carregar dados do servidor.');
+                    }
+                    dataStore = await response.json();
+                    renderTable();
+                } catch (error) {
+                    console.error('Erro:', error);
+                    noDataMessage.textContent = 'Erro ao carregar dados. Tente recarregar a página.';
+                }
             };
 
-            // CPF Masking
-            cpfInput.addEventListener('input', (e) => {
-                let value = e.target.value.replace(/\D/g, '');
-                value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-                e.target.value = value.slice(0, 14);
-            });
+            // Função para adicionar um novo registro
+            const adicionarRegistro = async (novoRegistro) => {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(novoRegistro)
+                    });
+                    if (!response.ok) {
+                        throw new Error('Falha ao salvar o registro.');
+                    }
+                    await carregarDados(); // Recarrega os dados para mostrar o novo item
+                } catch (error) {
+                    console.error('Erro:', error);
+                    alert('Não foi possível salvar o registro.');
+                }
+            };
 
+            // Função para deletar um registro
+            const deletarRegistro = async (id) => {
+                 if (!confirm('Tem certeza que deseja excluir este registro?')) {
+                    return;
+                }
+                try {
+                    const response = await fetch(`${apiUrl}/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) {
+                        throw new Error('Falha ao deletar o registro.');
+                    }
+                    await carregarDados(); // Recarrega os dados
+                } catch (error) {
+                    console.error('Erro:', error);
+                    alert('Não foi possível deletar o registro.');
+                }
+            };
 
-            // Function to render the table from dataStore
+            // --- FUNÇÕES DE RENDERIZAÇÃO E EVENTOS ---
+
             const renderTable = () => {
-                tableBody.innerHTML = ''; // Clear existing rows
+                tableBody.innerHTML = '';
                 if (dataStore.length === 0) {
                     noDataMessage.style.display = 'block';
                     exportButton.disabled = true;
                 } else {
                     noDataMessage.style.display = 'none';
                     exportButton.disabled = false;
-                    dataStore.forEach((rowData, index) => {
+                    dataStore.forEach(rowData => {
                         const row = document.createElement('tr');
                         row.className = 'hover:bg-gray-50';
                         
-                        // Format date and value for display
-                        const formatDate = (dateStr) => {
-                            if (!dateStr) return '';
-                            const [year, month, day] = dateStr.split('-');
-                            return `${day}/${month}/${year}`;
-                        };
-                        
-                        const formatValue = (value) => {
-                            if (value === '' || value === null || isNaN(parseFloat(value))) return '';
-                            return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                        };
+                        const formatDate = (dateStr) => dateStr ? new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+                        const formatValue = (value) => (value || value === 0) ? parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '';
 
                         row.innerHTML = `
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${index + 1}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(rowData.dataSolicitacao)}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${rowData.requerente}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${rowData.cpfRequerente}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${rowData.falecido}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${rowData.cpfRgFalecido}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(rowData.dataObito)}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${rowData.onibus}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatValue(rowData.valor)}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button data-index="${index}" class="text-red-600 hover:text-red-900 delete-btn">Excluir</button>
+                                <button data-id="${rowData.id}" class="text-red-600 hover:text-red-900 delete-btn">Excluir</button>
                             </td>
                         `;
                         tableBody.appendChild(row);
@@ -201,91 +201,57 @@
                 }
             };
 
-            // Handle form submission
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const formData = new FormData(form);
-                const newEntry = {
-                    dataSolicitacao: formData.get('data-solicitacao'),
-                    requerente: formData.get('requerente'),
-                    cpfRequerente: formData.get('cpf-requerente'),
-                    falecido: formData.get('falecido'),
-                    cpfRgFalecido: formData.get('cpf-rg-falecido'),
-                    dataObito: formData.get('data-obito'),
-                    onibus: formData.get('onibus'),
-                    valor: formData.get('valor')
+                const novoRegistro = {
+                    dataSolicitacao: document.getElementById('data-solicitacao').value,
+                    requerente: document.getElementById('requerente').value,
+                    cpfRequerente: document.getElementById('cpf-requerente').value,
+                    falecido: document.getElementById('falecido').value,
+                    cpfRgFalecido: document.getElementById('cpf-rg-falecido').value,
+                    dataObito: document.getElementById('data-obito').value,
+                    onibus: parseInt(document.getElementById('onibus').value) || null,
+                    valor: parseFloat(document.getElementById('valor').value) || null
                 };
-                dataStore.push(newEntry);
-                saveData(); // Save data after adding
-                renderTable();
+                adicionarRegistro(novoRegistro);
                 form.reset();
             });
 
-            // Handle row deletion
             tableBody.addEventListener('click', (e) => {
                 if (e.target.classList.contains('delete-btn')) {
-                    const index = parseInt(e.target.getAttribute('data-index'), 10);
-                    dataStore.splice(index, 1); // Remove from data store
-                    saveData(); // Save data after deleting
-                    renderTable(); // Re-render the table
-                }
-            });
-
-            // Handle CSV export
-            exportButton.addEventListener('click', () => {
-                if (dataStore.length === 0) {
-                    // This is a fallback, the button should be disabled.
-                    // Instead of an alert, we can show a temporary message.
-                    const originalText = exportButton.textContent;
-                    exportButton.textContent = 'Nenhum dado!';
-                    setTimeout(() => {
-                        exportButton.textContent = originalText;
-                    }, 2000);
-                    return;
-                }
-
-                const headers = [
-                    'Nº', 'DATA SOLICITAÇÃO', 'REQUERENTE', 'CPF', 'FALECIDO(A)', 'CPF/RG', 'DATA DO ÓBITO', 'ÔNIBU', 'VALOR'
-                ];
-                
-                // Function to format date for CSV (DD/MM/YYYY)
-                const formatDateForCSV = (dateStr) => {
-                    if (!dateStr) return '';
-                    const [year, month, day] = dateStr.split('-');
-                    return `${day}/${month}/${year}`;
-                };
-
-                // Map data to CSV format
-                const csvRows = dataStore.map((row, index) => [
-                    index + 1,
-                    formatDateForCSV(row.dataSolicitacao),
-                    `"${row.requerente.replace(/"/g, '""')}"`,
-                    `"${row.cpfRequerente}"`,
-                    `"${row.falecido.replace(/"/g, '""')}"`,
-                    `"${row.cpfRgFalecido}"`,
-                    formatDateForCSV(row.dataObito),
-                    row.onibus,
-                    (row.valor || '').replace('.', ',') // Use comma for decimal separator in Brazilian CSV
-                ].join(';')); // Use semicolon as separator for better compatibility with Excel in Brazil
-
-                const csvString = [headers.join(';'), ...csvRows].join('\n');
-                
-                const blob = new Blob([`\uFEFF${csvString}`], { type: 'text/csv;charset=utf-8;' }); // BOM for UTF-8
-
-                const link = document.createElement('a');
-                if (link.download !== undefined) {
-                    const url = URL.createObjectURL(blob);
-                    link.setAttribute('href', url);
-                    link.setAttribute('download', 'relatorio_auxilio_funeral.csv');
-                    link.style.visibility = 'hidden';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                    const id = e.target.getAttribute('data-id');
+                    deletarRegistro(id);
                 }
             });
             
-            // Initial render on page load
-            renderTable();
+            exportButton.addEventListener('click', () => {
+                if (dataStore.length === 0) return;
+                const headers = ['ID', 'Data Solicitação', 'Requerente', 'CPF Requerente', 'Falecido', 'CPF/RG Falecido', 'Data Óbito', 'Ônibus', 'Valor'];
+                const csvRows = dataStore.map(row => [
+                    row.id,
+                    row.dataSolicitacao,
+                    `"${(row.requerente || '').replace(/"/g, '""')}"`,
+                    `"${row.cpfRequerente || ''}"`,
+                    `"${(row.falecido || '').replace(/"/g, '""')}"`,
+                    `"${row.cpfRgFalecido || ''}"`,
+                    row.dataObito,
+                    row.onibus,
+                    (row.valor || '').toString().replace('.', ',')
+                ].join(';'));
+                const csvString = [headers.join(';'), ...csvRows].join('\n');
+                const blob = new Blob([`\uFEFF${csvString}`], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'relatorio_auxilio_funeral.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // Carrega os dados iniciais ao abrir a página
+            carregarDados();
         });
     </script>
 
