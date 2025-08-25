@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Controle de Dados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+    <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Acesso ao Sistema</h2>
+        <form id="login-form">
+            <div class="mb-4">
+                <label for="username" class="block text-sm font-medium text-gray-600 mb-1">Usuário</label>
+                <input type="text" id="username" name="username" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-sm font-medium text-gray-600 mb-1">Senha</label>
+                <input type="password" id="password" name="password" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                Entrar
+            </button>
+            <p id="error-message" class="text-red-500 text-sm text-center mt-4"></p>
+        </form>
+    </div>
+
+    <script>
+        // NOTE: This script will not work fully until the Cloudflare Worker is created.
+        // This is the frontend part of the login system.
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = '';
+
+            try {
+                // This will be the URL of our Cloudflare Worker, which we will create next.
+                // For now, it's a placeholder.
+                const workerUrl = '/api/login'; 
+
+                const response = await fetch(workerUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // If login is successful, store a token and redirect to the main page.
+                    localStorage.setItem('auth_token', result.token);
+                    window.location.href = '/index.html'; // Redirect to your data page
+                } else {
+                    // Show an error message if login fails.
+                    errorMessage.textContent = result.message || 'Usuário ou senha inválidos.';
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Erro ao tentar conectar. Tente novamente.';
+                console.error('Login error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
