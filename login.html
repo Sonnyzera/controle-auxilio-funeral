@@ -33,9 +33,6 @@
     </div>
 
     <script>
-        // NOTE: This script will not work fully until the Cloudflare Worker is created.
-        // This is the frontend part of the login system.
-
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value;
@@ -44,9 +41,8 @@
             errorMessage.textContent = '';
 
             try {
-                // This will be the URL of our Cloudflare Worker, which we will create next.
-                // For now, it's a placeholder.
-                const workerUrl = '/api/login'; 
+                // URL do Worker de autenticação.
+                const workerUrl = 'https://empty-breeze-e336.lucas-547.workers.dev/api/login'; 
 
                 const response = await fetch(workerUrl, {
                     method: 'POST',
@@ -57,11 +53,11 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    // If login is successful, store a token and redirect to the main page.
+                    // Se o login for bem-sucedido, armazena o token e redireciona.
                     localStorage.setItem('auth_token', result.token);
-                    window.location.href = '/index.html'; // Redirect to your data page
+                    window.location.href = '/index.html'; // Redireciona para a página de dados
                 } else {
-                    // Show an error message if login fails.
+                    // Mostra a mensagem de erro se o login falhar.
                     errorMessage.textContent = result.message || 'Usuário ou senha inválidos.';
                 }
             } catch (error) {
