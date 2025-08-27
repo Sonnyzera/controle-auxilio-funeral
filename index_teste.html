@@ -89,6 +89,7 @@
              <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-4 mb-4">
                 <h2 class="text-xl font-semibold">Registros Salvos (Teste)</h2>
                 <div class="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-2">
+                    <input type="text" id="search-filter" placeholder="Pesquisar em todos os registros..." class="w-full sm:w-auto p-2 border rounded-md">
                     <div class="w-full sm:w-auto flex items-center gap-2"><select id="month-filter" class="w-full p-2 border rounded-md"><option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select><input type="number" id="year-filter" placeholder="Ano" class="p-2 border rounded-md w-24"></div>
                     <div class="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
                         <button id="print-urna" class="w-full bg-gray-500 text-white p-2 rounded-md disabled:bg-gray-400">Imprimir Urnas</button>
@@ -140,6 +141,7 @@
         const editFormContainer = document.getElementById('edit-form');
         const cancelEditBtn = document.getElementById('cancel-edit-button');
         const saveEditBtn = document.getElementById('save-edit-button');
+        const searchFilterInput = document.getElementById('search-filter');
         
         let dataStore = [];
         let currentEditingId = null;
@@ -191,16 +193,23 @@
 
         // --- UI LOGIC & RENDERING ---
         const renderTable = () => {
+            const searchTerm = searchFilterInput.value.toLowerCase();
+            const filteredData = dataStore.filter(rowData => {
+                return Object.values(rowData).some(value => 
+                    String(value).toLowerCase().includes(searchTerm)
+                );
+            });
+
             tableBody.innerHTML = '';
             tableFooter.innerHTML = '';
             
-            if (dataStore.length === 0) {
+            if (filteredData.length === 0) {
                 noDataMessage.textContent = 'Nenhum registro encontrado.';
                 noDataMessage.style.display = 'block';
             } else {
                 noDataMessage.style.display = 'none';
                 let totalValor = 0;
-                dataStore.forEach((rowData, index) => {
+                filteredData.forEach((rowData, index) => {
                     const row = document.createElement('tr');
                     const formatDate = (dateStr) => dateStr ? new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR') : '';
                     totalValor += parseFloat(rowData.valor) || 0;
@@ -223,7 +232,7 @@
 
                 const footerRow = document.createElement('tr');
                 footerRow.innerHTML = `
-                    <td class="px-6 py-4 text-right font-bold" colspan="8">Total de Atendimentos: ${dataStore.length}</td>
+                    <td class="px-6 py-4 text-right font-bold" colspan="8">Total de Atendimentos: ${filteredData.length}</td>
                     <td class="px-6 py-4 font-bold" colspan="1">Soma Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                 `;
                 tableFooter.appendChild(footerRow);
@@ -233,6 +242,8 @@
             printUrnaBtn.disabled = !dataStore.some(d => d.tipo === 'Urna');
             printTransladoBtn.disabled = !dataStore.some(d => d.tipo === 'Translado');
         };
+
+        searchFilterInput.addEventListener('input', renderTable);
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -386,7 +397,6 @@
         };
         
         const formatNames = (event) => {
-            // Permite letras, acentos, ç e espaços
             let value = event.target.value.replace(/[^a-zA-Z\u00C0-\u017F\s]/g, '');
             event.target.value = value.toUpperCase();
         };
