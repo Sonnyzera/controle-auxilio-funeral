@@ -386,7 +386,8 @@
         };
         
         const formatNames = (event) => {
-            let value = event.target.value.replace(/[^a-zA-Z\s]/g, '');
+            // Permite letras, acentos, ç e espaços
+            let value = event.target.value.replace(/[^a-zA-Z\u00C0-\u017F\s]/g, '');
             event.target.value = value.toUpperCase();
         };
 
