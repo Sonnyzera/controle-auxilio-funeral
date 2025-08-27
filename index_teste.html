@@ -65,6 +65,7 @@
                 <div><label for="cpf-requerente" class="block text-sm font-medium">CPF (Requerente)</label><input type="text" id="cpf-requerente" placeholder="000.000.000-00" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 <div><label for="telefone-requerente" class="block text-sm font-medium">Telefone</label><input type="tel" id="telefone-requerente" placeholder="(00) 00000-0000" class="mt-1 block w-full p-2 border rounded-md"></div>
                 <div><label for="falecido" class="block text-sm font-medium">Falecido(a)</label><input type="text" id="falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                <div><label for="bairro-falecido" class="block text-sm font-medium">Bairro</label><input type="text" id="bairro-falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 <div><label for="idade-falecido" class="block text-sm font-medium">Idade (Falecido)</label><input type="number" id="idade-falecido" min="0" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 <div class="md:col-span-2 grid grid-cols-2 gap-2">
                     <div><label for="tipo-documento-falecido" class="block text-sm font-medium">Documento</label><select id="tipo-documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required><option value="" disabled selected>Selecione...</option><option value="CPF">CPF</option><option value="RG">RG</option><option value="Certidao">Certidão Nasc.</option></select></div>
@@ -216,6 +217,7 @@
                 cpfRequerente: form['cpf-requerente'].value,
                 telefoneRequerente: form['telefone-requerente'].value,
                 falecido: form.falecido.value,
+                bairroFalecido: form['bairro-falecido'].value,
                 idadeFalecido: form['idade-falecido'].value,
                 tipoDocumentoFalecido: form['tipo-documento-falecido'].value,
                 documentoFalecido: form['documento-falecido'].value,
@@ -320,7 +322,7 @@
                 'Nº': index + 1, 'Nº Registro': row.numeroRegistro, 'Tipo': row.tipo, 'Origem da Solicitação': row.origemSolicitacao, 
                 'Data da Solicitação': formatDateForExcel(row.dataSolicitacao), 'Requerente': row.requerente, 
                 'CPF do Requerente': row.cpfRequerente, 'Telefone do Requerente': row.telefoneRequerente,
-                'Falecido(a)': row.falecido, 'Idade do Falecido': row.idadeFalecido ? `${row.idadeFalecido} ANOS` : '', 
+                'Falecido(a)': row.falecido, 'Bairro': row.bairroFalecido, 'Idade do Falecido': row.idadeFalecido ? `${row.idadeFalecido} ANOS` : '', 
                 'Tipo Documento Falecido': row.tipoDocumentoFalecido, 'Documento Falecido': row.documentoFalecido, 
                 'Data do Óbito': formatDateForExcel(row.dataObito), 'Qtd. de Ônibus': row.onibus, 'Valor': row.valor
             }});
@@ -329,22 +331,22 @@
                 'Nº': '', 'Nº Registro': '', 'Tipo': '', 'Origem da Solicitação': '', 
                 'Data da Solicitação': '', 'Requerente': '', 
                 'CPF do Requerente': '', 'Telefone do Requerente': '',
-                'Falecido(a)': '', 'Idade do Falecido': '', 
+                'Falecido(a)': '', 'Bairro': '', 'Idade do Falecido': '', 
                 'Tipo Documento Falecido': '', 'Documento Falecido': '', 
                 'Data do Óbito': 'Total de Atendimentos:', 'Qtd. de Ônibus': dataToExport.length, 'Valor': totalValor
             });
 
             const worksheet = XLSX.utils.json_to_sheet(mappedData);
-            worksheet['!cols'] = [ {wch:5}, {wch:10}, {wch:10}, {wch:20}, {wch:20}, {wch:25}, {wch:20}, {wch:25}, {wch:15}, {wch:20}, {wch:20}, {wch:20}, {wch:15}, {wch:15}, {wch:15} ];
+            worksheet['!cols'] = [ {wch:5}, {wch:10}, {wch:10}, {wch:20}, {wch:20}, {wch:25}, {wch:20}, {wch:25}, {wch:25}, {wch:15}, {wch:20}, {wch:20}, {wch:20}, {wch:15}, {wch:15}, {wch:15} ];
             
             dataToExport.forEach((row, index) => {
-                const cellRef = XLSX.utils.encode_cell({c: 14, r: index + 1});
+                const cellRef = XLSX.utils.encode_cell({c: 15, r: index + 1}); // Coluna P (Valor)
                 if(worksheet[cellRef]) {
                     worksheet[cellRef].t = 'n';
                     worksheet[cellRef].z = 'R$ #,##0.00';
                 }
             });
-            const totalCellRef = XLSX.utils.encode_cell({c: 14, r: dataToExport.length + 1});
+            const totalCellRef = XLSX.utils.encode_cell({c: 15, r: dataToExport.length + 1});
             if(worksheet[totalCellRef]) {
                 worksheet[totalCellRef].t = 'n';
                 worksheet[totalCellRef].z = 'R$ #,##0.00';
@@ -375,9 +377,9 @@
             const printWindow = window.open('', '', 'height=600,width=800');
             
             let tableHTML = '';
-            let headers = ['Nº', 'Nº Reg.', 'Origem', 'Data Solic.', 'Requerente', 'CPF Req.', 'Telefone', 'Falecido(a)', 'Idade', 'Documento', 'Data Óbito', 'Valor'];
+            let headers = ['Nº', 'Nº Reg.', 'Origem', 'Data Solic.', 'Requerente', 'CPF Req.', 'Telefone', 'Falecido(a)', 'Bairro', 'Idade', 'Documento', 'Data Óbito', 'Valor'];
             if (tipo === 'Translado') {
-                headers.splice(11, 0, 'Qtd. Ônibus'); // Adiciona Qtd. Ônibus para Translado
+                headers.splice(12, 0, 'Qtd. Ônibus');
             }
 
             dataToPrint.forEach((row, index) => {
@@ -392,6 +394,7 @@
                         <td>${row.cpfRequerente || ''}</td>
                         <td>${row.telefoneRequerente || ''}</td>
                         <td>${row.falecido || ''}</td>
+                        <td>${row.bairroFalecido || ''}</td>
                         <td>${row.idadeFalecido ? row.idadeFalecido + ' ANOS' : ''}</td>
                         <td>${row.documentoFalecido || ''}</td>
                         <td>${row.dataObito ? new Date(row.dataObito + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
