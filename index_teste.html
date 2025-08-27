@@ -26,16 +26,16 @@
 <body class="bg-gray-100 text-gray-800">
 
     <!-- Modal de Edição -->
-    <div id="edit-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+    <div id="edit-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center p-4">
         <div class="relative mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Editar Registro</h3>
+            <div class="mt-3">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 text-center mb-4">Editar Registro</h3>
                 <div class="mt-2 px-7 py-3">
                     <form id="edit-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
-                        <!-- Campos do formulário de edição serão inseridos aqui dinamicamente -->
+                        <!-- Conteúdo do formulário de edição será gerado via JS -->
                     </form>
                 </div>
-                <div class="items-center px-4 py-3">
+                <div class="items-center px-4 py-3 text-center">
                     <button id="cancel-edit-button" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
                         Cancelar
                     </button>
@@ -275,17 +275,13 @@
             if (!record) return;
 
             currentEditingId = id;
-            // Clona o formulário de adição para o modal
-            const clonedForm = form.cloneNode(true);
-            clonedForm.id = 'edit-form-content'; // Dá um ID diferente para evitar conflitos
-            editFormContainer.innerHTML = ''; // Limpa o container
-            editFormContainer.appendChild(clonedForm);
+            editFormContainer.innerHTML = document.getElementById('data-form').innerHTML; // Clona o HTML do formulário
             
-            // Preenche o formulário clonado
-            const editForm = document.getElementById('edit-form-content');
+            const editForm = editFormContainer; // Agora o container é o próprio formulário
             const editOrigemSelect = editForm.querySelector('#origem-solicitacao');
             const editOnibusContainer = editForm.querySelector('#onibus-container');
             const editOnibusInput = editForm.querySelector('#onibus');
+            const editValorInput = editForm.querySelector('#valor');
 
             const handleEditTipoChange = () => {
                 const tipoSelecionado = editForm.querySelector('input[name="tipo"]:checked')?.value;
@@ -305,7 +301,7 @@
             editForm.querySelectorAll('input[name="tipo"]').forEach(radio => radio.addEventListener('change', handleEditTipoChange));
 
             editForm.querySelector(`input[name="tipo"][value="${record.tipo}"]`).checked = true;
-            handleEditTipoChange(); // Popula e ajusta a origem
+            handleEditTipoChange();
             editOrigemSelect.value = record.origemSolicitacao;
             
             editForm.querySelector('#numero-registro').value = record.numeroRegistro || '';
@@ -320,9 +316,10 @@
             editForm.querySelector('#documento-falecido').value = record.documentoFalecido || '';
             editForm.querySelector('#data-obito').value = record.dataObito || '';
             editOnibusInput.value = record.onibus || '0';
-            const valorFormatado = (record.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            editForm.querySelector('#valor').value = valorFormatado;
+            editValorInput.value = (record.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             
+            editValorInput.addEventListener('input', () => formatCurrency(editValorInput));
+
             editModal.classList.remove('hidden');
         };
 
@@ -334,7 +331,7 @@
 
         saveEditBtn.addEventListener('click', () => {
             if (!currentEditingId) return;
-            const editForm = document.getElementById('edit-form-content');
+            const editForm = editFormContainer;
             const valorNumerico = parseFloat(editForm.querySelector('#valor').value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
             const tipoSelecionado = editForm.querySelector('input[name="tipo"]:checked').value;
             const dadosAtualizados = {
