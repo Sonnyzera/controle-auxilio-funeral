@@ -292,7 +292,7 @@
             const editForm = editFormContainer;
             const submitButtonContainer = editForm.querySelector('button[type="submit"]').parentElement;
             if(submitButtonContainer) {
-                submitButtonContainer.remove(); // Remove o botão "Adicionar"
+                submitButtonContainer.remove();
             }
 
             const editOrigemSelect = editForm.querySelector('#origem-solicitacao');
@@ -568,7 +568,7 @@
                             .report-header img { height: 2.49cm; width: 18.46cm; object-fit: contain; }
                             .report-title { text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 20px; }
                             table { width: 100%; border-collapse: collapse; }
-                            th, td { border: 1px solid #ddd; padding: 6px; text-align: center; font-size: 9px; }
+                            th, td { border: 1px solid #ddd; padding: 6px; text-align: center; font-size: 9px; white-space: nowrap; }
                             th { background-color: #f2f2f2; }
                             tfoot { font-weight: bold; }
                             @page { size: landscape; margin: 15mm; }
