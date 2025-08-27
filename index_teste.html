@@ -275,12 +275,39 @@
             if (!record) return;
 
             currentEditingId = id;
-            editFormContainer.innerHTML = form.innerHTML; // Clona o formulário
+            // Clona o formulário de adição para o modal
+            const clonedForm = form.cloneNode(true);
+            clonedForm.id = 'edit-form-content'; // Dá um ID diferente para evitar conflitos
+            editFormContainer.innerHTML = ''; // Limpa o container
+            editFormContainer.appendChild(clonedForm);
             
-            // Preenche o formulário do modal com os dados do registro
-            const editForm = document.getElementById('edit-form');
+            // Preenche o formulário clonado
+            const editForm = document.getElementById('edit-form-content');
+            const editOrigemSelect = editForm.querySelector('#origem-solicitacao');
+            const editOnibusContainer = editForm.querySelector('#onibus-container');
+            const editOnibusInput = editForm.querySelector('#onibus');
+
+            const handleEditTipoChange = () => {
+                const tipoSelecionado = editForm.querySelector('input[name="tipo"]:checked')?.value;
+                 if (tipoSelecionado === 'Urna') {
+                    editOrigemSelect.innerHTML = '<option>UPA ITINGA</option><option>SEMDESC</option>';
+                    editOrigemSelect.disabled = false;
+                    editOnibusContainer.classList.add('hidden');
+                    editOnibusInput.required = false;
+                } else if (tipoSelecionado === 'Translado') {
+                    editOrigemSelect.innerHTML = '<option selected>SEMDESC</option>';
+                    editOrigemSelect.disabled = true;
+                    editOnibusContainer.classList.remove('hidden');
+                    editOnibusInput.required = true;
+                }
+            };
+            
+            editForm.querySelectorAll('input[name="tipo"]').forEach(radio => radio.addEventListener('change', handleEditTipoChange));
+
             editForm.querySelector(`input[name="tipo"][value="${record.tipo}"]`).checked = true;
-            editForm.querySelector('#origem-solicitacao').value = record.origemSolicitacao;
+            handleEditTipoChange(); // Popula e ajusta a origem
+            editOrigemSelect.value = record.origemSolicitacao;
+            
             editForm.querySelector('#numero-registro').value = record.numeroRegistro || '';
             editForm.querySelector('#data-solicitacao').value = record.dataSolicitacao || '';
             editForm.querySelector('#requerente').value = record.requerente || '';
@@ -292,7 +319,7 @@
             editForm.querySelector('#tipo-documento-falecido').value = record.tipoDocumentoFalecido || '';
             editForm.querySelector('#documento-falecido').value = record.documentoFalecido || '';
             editForm.querySelector('#data-obito').value = record.dataObito || '';
-            editForm.querySelector('#onibus').value = record.onibus || '0';
+            editOnibusInput.value = record.onibus || '0';
             const valorFormatado = (record.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             editForm.querySelector('#valor').value = valorFormatado;
             
@@ -307,7 +334,7 @@
 
         saveEditBtn.addEventListener('click', () => {
             if (!currentEditingId) return;
-            const editForm = document.getElementById('edit-form');
+            const editForm = document.getElementById('edit-form-content');
             const valorNumerico = parseFloat(editForm.querySelector('#valor').value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
             const tipoSelecionado = editForm.querySelector('input[name="tipo"]:checked').value;
             const dadosAtualizados = {
