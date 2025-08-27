@@ -275,9 +275,15 @@
             if (!record) return;
 
             currentEditingId = id;
-            editFormContainer.innerHTML = document.getElementById('data-form').innerHTML; // Clona o HTML do formulário
+            const formHtml = document.getElementById('data-form').innerHTML;
+            editFormContainer.innerHTML = formHtml;
             
-            const editForm = editFormContainer; // Agora o container é o próprio formulário
+            const editForm = editFormContainer;
+            const submitButtonContainer = editForm.querySelector('button[type="submit"]').parentElement;
+            if(submitButtonContainer) {
+                submitButtonContainer.remove(); // Remove o botão "Adicionar"
+            }
+
             const editOrigemSelect = editForm.querySelector('#origem-solicitacao');
             const editOnibusContainer = editForm.querySelector('#onibus-container');
             const editOnibusInput = editForm.querySelector('#onibus');
