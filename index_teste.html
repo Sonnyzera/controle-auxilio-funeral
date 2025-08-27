@@ -14,6 +14,24 @@
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
         .hidden { display: none; }
+        /* Estilos para impressão */
+        @media print {
+            @page {
+                size: landscape;
+            }
+            body * {
+                visibility: hidden;
+            }
+            #print-section, #print-section * {
+                visibility: visible;
+            }
+            #print-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -53,7 +71,7 @@
                     <div><label for="documento-falecido" class="block text-sm font-medium">Número</label><input type="text" id="documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 </div>
                 <div><label for="data-obito" class="block text-sm font-medium">Data do Óbito</label><input type="date" id="data-obito" class="mt-1 block w-full p-2 border rounded-md" required></div>
-                <div class="col-span-1"><label for="onibus" class="block text-sm font-medium">Qtd. de Ônibus</label><input type="number" id="onibus" min="0" placeholder="Qtd" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                <div id="onibus-container" class="col-span-1"><label for="onibus" class="block text-sm font-medium">Qtd. de Ônibus</label><input type="number" id="onibus" min="0" placeholder="Qtd" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 <div><label for="valor" class="block text-sm font-medium">Valor</label><input type="text" id="valor" placeholder="R$ 0,00" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 <div class="md:col-span-4 flex justify-end"><button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md">Adicionar</button></div>
             </form>
@@ -65,7 +83,11 @@
                 <h2 class="text-xl font-semibold">Registros Salvos</h2>
                 <div class="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-2">
                     <div class="w-full sm:w-auto flex items-center gap-2"><select id="month-filter" class="w-full p-2 border rounded-md"><option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select><input type="number" id="year-filter" placeholder="Ano" class="p-2 border rounded-md w-24"></div>
-                    <div class="w-full sm:w-auto flex flex-col sm:flex-row gap-2"><button id="export-urna" class="w-full bg-blue-600 text-white p-2 rounded-md disabled:bg-gray-400">Exportar Urnas</button><button id="export-translado" class="w-full bg-green-600 text-white p-2 rounded-md disabled:bg-gray-400">Exportar Translados</button></div>
+                    <div class="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
+                        <button id="print-button" class="w-full bg-gray-500 text-white p-2 rounded-md disabled:bg-gray-400">Imprimir Relatório</button>
+                        <button id="export-urna" class="w-full bg-blue-600 text-white p-2 rounded-md disabled:bg-gray-400">Exportar Urnas</button>
+                        <button id="export-translado" class="w-full bg-green-600 text-white p-2 rounded-md disabled:bg-gray-400">Exportar Translados</button>
+                    </div>
                 </div>
             </div>
             <div class="overflow-x-auto"><table class="min-w-full divide-y"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium uppercase">Nº Reg.</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Tipo</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Origem</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Data Solic.</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Requerente</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Falecido(a)</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Idade</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Ação</th></tr></thead><tbody id="data-table-body" class="bg-white divide-y"></tbody></table><p id="no-data-message" class="text-center py-8">Carregando dados...</p></div>
@@ -99,6 +121,9 @@
         const valorInput = document.getElementById('valor');
         const tipoDocumentoFalecidoSelect = document.getElementById('tipo-documento-falecido');
         const documentoFalecidoInput = document.getElementById('documento-falecido');
+        const printButton = document.getElementById('print-button');
+        const onibusContainer = document.getElementById('onibus-container');
+        const onibusInput = document.getElementById('onibus');
         
         let dataStore = [];
 
@@ -161,13 +186,15 @@
             }
             document.getElementById('export-urna').disabled = !dataStore.some(d => d.tipo === 'Urna');
             document.getElementById('export-translado').disabled = !dataStore.some(d => d.tipo === 'Translado');
+            printButton.disabled = dataStore.length === 0;
         };
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const valorNumerico = parseFloat(valorInput.value.replace('R$', '').replace('.', '').replace(',', '.').trim());
+            const tipoSelecionado = form.tipo.value;
             const novoRegistro = {
-                tipo: form.tipo.value,
+                tipo: tipoSelecionado,
                 origemSolicitacao: form['origem-solicitacao'].value,
                 numeroRegistro: form['numero-registro'].value,
                 dataSolicitacao: form['data-solicitacao'].value,
@@ -179,7 +206,7 @@
                 tipoDocumentoFalecido: form['tipo-documento-falecido'].value,
                 documentoFalecido: form['documento-falecido'].value,
                 dataObito: form['data-obito'].value,
-                onibus: form.onibus.value,
+                onibus: tipoSelecionado === 'Translado' ? form.onibus.value : '0', // Salva 0 para Urna
                 valor: isNaN(valorNumerico) ? 0 : valorNumerico
             };
             adicionarRegistro(novoRegistro);
@@ -224,17 +251,23 @@
             if (tipoSelecionado === 'Urna') {
                 origemSelect.innerHTML = '<option>UPA ITINGA</option><option>SEMDESC</option>';
                 origemSelect.disabled = false;
+                onibusContainer.classList.add('hidden');
+                onibusInput.required = false;
             } else if (tipoSelecionado === 'Translado') {
                 origemSelect.innerHTML = '<option selected>SEMDESC</option>';
                 origemSelect.disabled = true;
+                onibusContainer.classList.remove('hidden');
+                onibusInput.required = true;
             } else {
                  origemSelect.innerHTML = '';
+                 onibusContainer.classList.add('hidden');
+                 onibusInput.required = false;
             }
         };
         tipoRadios.forEach(radio => radio.addEventListener('change', handleTipoChange));
         
-        // --- EXPORT LOGIC ---
-        const exportToXLSX = (tipo) => {
+        // --- EXPORT AND PRINT LOGIC ---
+        const getFilteredData = () => {
             const monthFilter = document.getElementById('month-filter');
             const yearFilter = document.getElementById('year-filter');
             const selectedMonth = parseInt(monthFilter.value, 10);
@@ -242,43 +275,45 @@
 
             if (!selectedYear || selectedYear.toString().length !== 4) {
                 alert('Por favor, insira um ano válido com 4 dígitos.');
-                return;
+                return null;
             }
 
-            const dataToExport = dataStore.filter(row => {
-                if (!row.dataSolicitacao || row.tipo !== tipo) return false;
+            const dataToProcess = dataStore.filter(row => {
+                if (!row.dataSolicitacao) return false;
                 const rowDate = new Date(row.dataSolicitacao + 'T00:00:00');
                 return rowDate.getMonth() + 1 === selectedMonth && rowDate.getFullYear() === selectedYear;
             });
 
+            return { data: dataToProcess, month: selectedMonth, year: selectedYear };
+        };
+
+        const exportToXLSX = (tipo) => {
+            const filteredResult = getFilteredData();
+            if (!filteredResult) return;
+
+            const { data, month, year } = filteredResult;
+            const dataToExport = data.filter(row => row.tipo === tipo);
+
             if (dataToExport.length === 0) {
-                alert(`Nenhum registro do tipo "${tipo}" encontrado para ${selectedMonth}/${selectedYear}.`);
+                alert(`Nenhum registro do tipo "${tipo}" encontrado para ${month}/${year}.`);
                 return;
             }
             
             const formatDateForExcel = (dateStr) => dateStr ? new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR') : '';
 
             const mappedData = dataToExport.map(row => ({
-                'Nº Registro': row.numeroRegistro,
-                'Tipo': row.tipo, 
-                'Origem da Solicitação': row.origemSolicitacao, 
-                'Data da Solicitação': formatDateForExcel(row.dataSolicitacao),
-                'Requerente': row.requerente, 
-                'CPF do Requerente': row.cpfRequerente, 
-                'Telefone do Requerente': row.telefoneRequerente,
-                'Falecido(a)': row.falecido, 
-                'Idade do Falecido': row.idadeFalecido ? `${row.idadeFalecido} ANOS` : '', 
-                'Tipo Documento Falecido': row.tipoDocumentoFalecido,
-                'Documento Falecido': row.documentoFalecido, 
-                'Data do Óbito': formatDateForExcel(row.dataObito), 
-                'Qtd. de Ônibus': row.onibus, 
-                'Valor': row.valor
+                'Nº Registro': row.numeroRegistro, 'Tipo': row.tipo, 'Origem da Solicitação': row.origemSolicitacao, 
+                'Data da Solicitação': formatDateForExcel(row.dataSolicitacao), 'Requerente': row.requerente, 
+                'CPF do Requerente': row.cpfRequerente, 'Telefone do Requerente': row.telefoneRequerente,
+                'Falecido(a)': row.falecido, 'Idade do Falecido': row.idadeFalecido ? `${row.idadeFalecido} ANOS` : '', 
+                'Tipo Documento Falecido': row.tipoDocumentoFalecido, 'Documento Falecido': row.documentoFalecido, 
+                'Data do Óbito': formatDateForExcel(row.dataObito), 'Qtd. de Ônibus': row.onibus, 'Valor': row.valor
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(mappedData);
             worksheet['!cols'] = [ {wch:10}, {wch:10}, {wch:20}, {wch:20}, {wch:25}, {wch:20}, {wch:25}, {wch:15}, {wch:20}, {wch:20}, {wch:20}, {wch:15}, {wch:15} ];
             dataToExport.forEach((row, index) => {
-                const cellRef = XLSX.utils.encode_cell({c: 13, r: index + 1}); // Coluna N (Valor)
+                const cellRef = XLSX.utils.encode_cell({c: 13, r: index + 1});
                 if(worksheet[cellRef]) {
                     worksheet[cellRef].t = 'n';
                     worksheet[cellRef].z = 'R$ #,##0.00';
@@ -287,11 +322,67 @@
 
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, tipo);
-            XLSX.writeFile(workbook, `Relatorio_${tipo}_${selectedMonth}-${selectedYear}.xlsx`);
+            XLSX.writeFile(workbook, `Relatorio_${tipo}_${month}-${year}.xlsx`);
+        };
+
+        const printReport = () => {
+            const filteredResult = getFilteredData();
+            if (!filteredResult) return;
+            
+            const { data, month, year } = filteredResult;
+
+            if (data.length === 0) {
+                alert(`Nenhum registro encontrado para ${month}/${year} para imprimir.`);
+                return;
+            }
+
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write('<html><head><title>Relatório de Atendimentos</title>');
+            printWindow.document.write(`
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 10px; }
+                    th { background-color: #f2f2f2; }
+                    h1 { text-align: center; }
+                    @page { size: landscape; margin: 20mm; }
+                </style>
+            `);
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(`<h1>Relatório de Atendimentos - ${month}/${year}</h1>`);
+            let tableHTML = '<table><thead><tr>';
+            const headers = ['Nº Reg.', 'Tipo', 'Origem', 'Data Solic.', 'Requerente', 'Falecido(a)', 'Idade', 'Documento', 'Telefone', 'Valor'];
+            headers.forEach(h => tableHTML += `<th>${h}</th>`);
+            tableHTML += '</tr></thead><tbody>';
+
+            data.forEach(row => {
+                tableHTML += `
+                    <tr>
+                        <td>${row.numeroRegistro || ''}</td>
+                        <td>${row.tipo || ''}</td>
+                        <td>${row.origemSolicitacao || ''}</td>
+                        <td>${row.dataSolicitacao ? new Date(row.dataSolicitacao + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
+                        <td>${row.requerente || ''}</td>
+                        <td>${row.falecido || ''}</td>
+                        <td>${row.idadeFalecido ? row.idadeFalecido + ' ANOS' : ''}</td>
+                        <td>${row.documentoFalecido || ''}</td>
+                        <td>${row.telefoneRequerente || ''}</td>
+                        <td>${(row.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            printWindow.document.write(tableHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => { printWindow.print(); }, 500);
         };
         
         document.getElementById('export-urna').addEventListener('click', () => exportToXLSX('Urna'));
         document.getElementById('export-translado').addEventListener('click', () => exportToXLSX('Translado'));
+        printButton.addEventListener('click', printReport);
         
         // --- INITIALIZATION ---
         const setInitialDateFilters = () => {
@@ -300,6 +391,7 @@
             document.getElementById('year-filter').value = today.getFullYear();
         };
         setInitialDateFilters();
+        handleTipoChange(); // Call on load to set initial state
     </script>
 </body>
 </html>
