@@ -90,7 +90,7 @@
                     </div>
                 </div>
             </div>
-            <div class="overflow-x-auto"><table class="min-w-full divide-y"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium uppercase">Nº Reg.</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Tipo</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Origem</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Data Solic.</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Requerente</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Falecido(a)</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Idade</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Ação</th></tr></thead><tbody id="data-table-body" class="bg-white divide-y"></tbody></table><p id="no-data-message" class="text-center py-8">Carregando dados...</p></div>
+            <div class="overflow-x-auto"><table class="min-w-full divide-y"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium uppercase">Nº</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Nº Reg.</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Tipo</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Origem</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Data Solic.</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Requerente</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Falecido(a)</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Idade</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Ação</th></tr></thead><tbody id="data-table-body" class="bg-white divide-y"></tbody><tfoot id="data-table-footer" class="bg-gray-50 font-bold"></tfoot></table><p id="no-data-message" class="text-center py-8">Carregando dados...</p></div>
         </div>
     </div>
 
@@ -112,12 +112,11 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- NOME DA COLEÇÃO DE TESTE ---
         const collectionName = "registros_teste";
 
-        // --- DOM ELEMENTS ---
         const form = document.getElementById('data-form');
         const tableBody = document.getElementById('data-table-body');
+        const tableFooter = document.getElementById('data-table-footer');
         const noDataMessage = document.getElementById('no-data-message');
         const tipoRadios = document.querySelectorAll('input[name="tipo"]');
         const origemSelect = document.getElementById('origem-solicitacao');
@@ -130,7 +129,6 @@
         
         let dataStore = [];
 
-        // --- AUTHENTICATION ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.body.style.visibility = 'visible';
@@ -142,7 +140,6 @@
 
         document.getElementById('logout-button').addEventListener('click', () => signOut(auth));
 
-        // --- FIRESTORE LOGIC ---
         const carregarDados = async () => {
             const q = query(collection(db, collectionName), orderBy("dataSolicitacao", "desc"));
             const querySnapshot = await getDocs(q);
@@ -163,18 +160,22 @@
             carregarDados();
         };
 
-        // --- UI LOGIC & RENDERING ---
         const renderTable = () => {
             tableBody.innerHTML = '';
+            tableFooter.innerHTML = '';
+            
             if (dataStore.length === 0) {
                 noDataMessage.textContent = 'Nenhum registro encontrado.';
                 noDataMessage.style.display = 'block';
             } else {
                 noDataMessage.style.display = 'none';
-                dataStore.forEach(rowData => {
+                let totalValor = 0;
+                dataStore.forEach((rowData, index) => {
                     const row = document.createElement('tr');
                     const formatDate = (dateStr) => dateStr ? new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+                    totalValor += parseFloat(rowData.valor) || 0;
                     row.innerHTML = `
+                        <td class="px-6 py-4 font-bold">${index + 1}</td>
                         <td class="px-6 py-4">${rowData.numeroRegistro || ''}</td>
                         <td class="px-6 py-4">${rowData.tipo}</td>
                         <td class="px-6 py-4">${rowData.origemSolicitacao}</td>
@@ -186,6 +187,14 @@
                     `;
                     tableBody.appendChild(row);
                 });
+
+                // Render Footer
+                const footerRow = document.createElement('tr');
+                footerRow.innerHTML = `
+                    <td class="px-6 py-4 text-right font-bold" colspan="8">Total de Atendimentos: ${dataStore.length}</td>
+                    <td class="px-6 py-4 font-bold" colspan="1">Soma Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                `;
+                tableFooter.appendChild(footerRow);
             }
             document.getElementById('export-urna').disabled = !dataStore.some(d => d.tipo === 'Urna');
             document.getElementById('export-translado').disabled = !dataStore.some(d => d.tipo === 'Translado');
@@ -194,7 +203,7 @@
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            const valorNumerico = parseFloat(valorInput.value.replace('R$', '').replace('.', '').replace(',', '.').trim());
+            const valorNumerico = parseFloat(valorInput.value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
             const tipoSelecionado = form.tipo.value;
             const novoRegistro = {
                 tipo: tipoSelecionado,
@@ -223,7 +232,6 @@
             }
         });
 
-        // --- MASKS AND FORMATTING ---
         const formatCurrency = (input) => {
             let value = input.value.replace(/\D/g, '');
             value = (value / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -269,7 +277,6 @@
         };
         tipoRadios.forEach(radio => radio.addEventListener('change', handleTipoChange));
         
-        // --- EXPORT AND PRINT LOGIC ---
         const getFilteredData = () => {
             const monthFilter = document.getElementById('month-filter');
             const yearFilter = document.getElementById('year-filter');
@@ -303,25 +310,46 @@
             }
             
             const formatDateForExcel = (dateStr) => dateStr ? new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+            let totalValor = 0;
 
-            const mappedData = dataToExport.map(row => ({
-                'Nº Registro': row.numeroRegistro, 'Tipo': row.tipo, 'Origem da Solicitação': row.origemSolicitacao, 
+            const mappedData = dataToExport.map((row, index) => {
+                totalValor += parseFloat(row.valor) || 0;
+                return {
+                'Nº': index + 1, 'Nº Registro': row.numeroRegistro, 'Tipo': row.tipo, 'Origem da Solicitação': row.origemSolicitacao, 
                 'Data da Solicitação': formatDateForExcel(row.dataSolicitacao), 'Requerente': row.requerente, 
                 'CPF do Requerente': row.cpfRequerente, 'Telefone do Requerente': row.telefoneRequerente,
                 'Falecido(a)': row.falecido, 'Idade do Falecido': row.idadeFalecido ? `${row.idadeFalecido} ANOS` : '', 
                 'Tipo Documento Falecido': row.tipoDocumentoFalecido, 'Documento Falecido': row.documentoFalecido, 
                 'Data do Óbito': formatDateForExcel(row.dataObito), 'Qtd. de Ônibus': row.onibus, 'Valor': row.valor
-            }));
+            }});
+
+            // Add total row
+            mappedData.push({
+                'Nº': '', 'Nº Registro': '', 'Tipo': '', 'Origem da Solicitação': '', 
+                'Data da Solicitação': '', 'Requerente': '', 
+                'CPF do Requerente': '', 'Telefone do Requerente': '',
+                'Falecido(a)': '', 'Idade do Falecido': '', 
+                'Tipo Documento Falecido': '', 'Documento Falecido': '', 
+                'Data do Óbito': 'Total de Atendimentos:', 'Qtd. de Ônibus': dataToExport.length, 'Valor': totalValor
+            });
 
             const worksheet = XLSX.utils.json_to_sheet(mappedData);
-            worksheet['!cols'] = [ {wch:10}, {wch:10}, {wch:20}, {wch:20}, {wch:25}, {wch:20}, {wch:25}, {wch:15}, {wch:20}, {wch:20}, {wch:20}, {wch:15}, {wch:15} ];
+            worksheet['!cols'] = [ {wch:5}, {wch:10}, {wch:10}, {wch:20}, {wch:20}, {wch:25}, {wch:20}, {wch:25}, {wch:15}, {wch:20}, {wch:20}, {wch:20}, {wch:15}, {wch:15}, {wch:15} ];
+            
+            // Format value column and total value
             dataToExport.forEach((row, index) => {
-                const cellRef = XLSX.utils.encode_cell({c: 13, r: index + 1});
+                const cellRef = XLSX.utils.encode_cell({c: 14, r: index + 1}); // Coluna O (Valor)
                 if(worksheet[cellRef]) {
                     worksheet[cellRef].t = 'n';
                     worksheet[cellRef].z = 'R$ #,##0.00';
                 }
             });
+            const totalCellRef = XLSX.utils.encode_cell({c: 14, r: dataToExport.length + 1});
+            if(worksheet[totalCellRef]) {
+                worksheet[totalCellRef].t = 'n';
+                worksheet[totalCellRef].z = 'R$ #,##0.00';
+            }
+
 
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, tipo);
@@ -341,31 +369,35 @@
 
             const monthNames = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
             const monthName = monthNames[month - 1];
+            let totalValor = 0;
 
             const printWindow = window.open('', '', 'height=600,width=800');
             printWindow.document.write('<html><head><title>Relatório de Atendimentos</title>');
             printWindow.document.write(`
                 <style>
                     body { font-family: Arial, sans-serif; }
-                    .report-header { margin-bottom: 40px; } /* Espaço para a logo */
+                    .report-header { margin-bottom: 40px; }
                     .report-title { text-align: center; font-size: 16px; font-weight: bold; }
                     table { width: 100%; border-collapse: collapse; }
                     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 10px; }
                     th { background-color: #f2f2f2; }
+                    tfoot { font-weight: bold; }
                     @page { size: landscape; margin: 20mm; }
                 </style>
             `);
             printWindow.document.write('</head><body>');
-            printWindow.document.write('<div class="report-header"></div>'); // Espaço reservado para a logo
+            printWindow.document.write('<div class="report-header"></div>');
             printWindow.document.write(`<div class="report-title">Relatório de Atendimentos - ${monthName}/${year}</div>`);
             let tableHTML = '<table><thead><tr>';
-            const headers = ['Nº Reg.', 'Tipo', 'Origem', 'Data Solic.', 'Requerente', 'Falecido(a)', 'Idade', 'Documento', 'Telefone', 'Valor'];
+            const headers = ['Nº', 'Nº Reg.', 'Tipo', 'Origem', 'Data Solic.', 'Requerente', 'Falecido(a)', 'Idade', 'Documento', 'Telefone', 'Valor'];
             headers.forEach(h => tableHTML += `<th>${h}</th>`);
             tableHTML += '</tr></thead><tbody>';
 
-            data.forEach(row => {
+            data.forEach((row, index) => {
+                totalValor += parseFloat(row.valor) || 0;
                 tableHTML += `
                     <tr>
+                        <td>${index + 1}</td>
                         <td>${row.numeroRegistro || ''}</td>
                         <td>${row.tipo || ''}</td>
                         <td>${row.origemSolicitacao || ''}</td>
@@ -380,7 +412,16 @@
                 `;
             });
 
-            tableHTML += '</tbody></table>';
+            tableHTML += '</tbody>';
+            tableHTML += `
+                <tfoot>
+                    <tr>
+                        <td colspan="10" style="text-align: right;">Total de Atendimentos: ${data.length}</td>
+                        <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    </tr>
+                </tfoot>
+            `;
+            tableHTML += '</table>';
             printWindow.document.write(tableHTML);
             printWindow.document.write('</body></html>');
             printWindow.document.close();
@@ -392,14 +433,13 @@
         document.getElementById('export-translado').addEventListener('click', () => exportToXLSX('Translado'));
         printButton.addEventListener('click', printReport);
         
-        // --- INITIALIZATION ---
         const setInitialDateFilters = () => {
             const today = new Date();
             document.getElementById('month-filter').value = today.getMonth() + 1;
             document.getElementById('year-filter').value = today.getFullYear();
         };
         setInitialDateFilters();
-        handleTipoChange(); // Call on load to set initial state
+        handleTipoChange();
     </script>
 </body>
 </html>
