@@ -374,9 +374,18 @@
             } else if (inputId === 'telefone-requerente') {
                 value = value.replace(/^(\d{2})(\d)/g, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2');
                 event.target.value = value.slice(0, 15);
+            } else if (inputId === 'numero-registro') {
+                event.target.value = value;
             }
         };
-        ['cpf-requerente', 'telefone-requerente', 'documento-falecido'].forEach(id => document.getElementById(id).addEventListener('input', applyMask));
+        
+        const formatNames = (event) => {
+            let value = event.target.value.replace(/[^a-zA-Z\s]/g, '');
+            event.target.value = value.toUpperCase();
+        };
+
+        ['cpf-requerente', 'telefone-requerente', 'documento-falecido', 'numero-registro'].forEach(id => document.getElementById(id).addEventListener('input', applyMask));
+        ['requerente', 'falecido', 'bairro-falecido'].forEach(id => document.getElementById(id).addEventListener('input', formatNames));
         
         tipoDocumentoFalecidoSelect.addEventListener('change', () => {
             documentoFalecidoInput.value = '';
