@@ -375,9 +375,14 @@
             const printWindow = window.open('', '', 'height=600,width=800');
             
             let tableHTML = '';
+            let headers = ['Nº', 'Nº Reg.', 'Origem', 'Data Solic.', 'Requerente', 'CPF Req.', 'Telefone', 'Falecido(a)', 'Idade', 'Documento', 'Data Óbito', 'Valor'];
+            if (tipo === 'Translado') {
+                headers.splice(11, 0, 'Qtd. Ônibus'); // Adiciona Qtd. Ônibus para Translado
+            }
+
             dataToPrint.forEach((row, index) => {
                 totalValor += parseFloat(row.valor) || 0;
-                tableHTML += `
+                let rowHTML = `
                     <tr>
                         <td>${index + 1}</td>
                         <td>${row.numeroRegistro || ''}</td>
@@ -390,10 +395,15 @@
                         <td>${row.idadeFalecido ? row.idadeFalecido + ' ANOS' : ''}</td>
                         <td>${row.documentoFalecido || ''}</td>
                         <td>${row.dataObito ? new Date(row.dataObito + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
-                        <td>${row.onibus || '0'}</td>
+                `;
+                if (tipo === 'Translado') {
+                    rowHTML += `<td>${row.onibus || '0'}</td>`;
+                }
+                rowHTML += `
                         <td>${(row.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                     </tr>
                 `;
+                tableHTML += rowHTML;
             });
 
             const fullHtml = `
@@ -422,7 +432,7 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Nº</th><th>Nº Reg.</th><th>Origem</th><th>Data Solic.</th><th>Requerente</th><th>CPF Req.</th><th>Telefone</th><th>Falecido(a)</th><th>Idade</th><th>Documento</th><th>Data Óbito</th><th>Qtd. Ônibus</th><th>Valor</th>
+                                        ${headers.map(h => `<th>${h}</th>`).join('')}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -430,7 +440,7 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="12" style="text-align: right;">Total de Atendimentos: ${dataToPrint.length}</td>
+                                        <td colspan="${headers.length - 1}" style="text-align: right;">Total de Atendimentos: ${dataToPrint.length}</td>
                                         <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                     </tr>
                                 </tfoot>
