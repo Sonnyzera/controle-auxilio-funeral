@@ -323,7 +323,6 @@
                 'Data do Óbito': formatDateForExcel(row.dataObito), 'Qtd. de Ônibus': row.onibus, 'Valor': row.valor
             }});
 
-            // Add total row
             mappedData.push({
                 'Nº': '', 'Nº Registro': '', 'Tipo': '', 'Origem da Solicitação': '', 
                 'Data da Solicitação': '', 'Requerente': '', 
@@ -336,9 +335,8 @@
             const worksheet = XLSX.utils.json_to_sheet(mappedData);
             worksheet['!cols'] = [ {wch:5}, {wch:10}, {wch:10}, {wch:20}, {wch:20}, {wch:25}, {wch:20}, {wch:25}, {wch:15}, {wch:20}, {wch:20}, {wch:20}, {wch:15}, {wch:15}, {wch:15} ];
             
-            // Format value column and total value
             dataToExport.forEach((row, index) => {
-                const cellRef = XLSX.utils.encode_cell({c: 14, r: index + 1}); // Coluna O (Valor)
+                const cellRef = XLSX.utils.encode_cell({c: 14, r: index + 1});
                 if(worksheet[cellRef]) {
                     worksheet[cellRef].t = 'n';
                     worksheet[cellRef].z = 'R$ #,##0.00';
@@ -375,17 +373,18 @@
             printWindow.document.write('<html><head><title>Relatório de Atendimentos</title>');
             printWindow.document.write(`
                 <style>
-                    body { font-family: Arial, sans-serif; }
-                    .report-header { margin-bottom: 40px; }
-                    .report-title { text-align: center; font-size: 16px; font-weight: bold; }
+                    body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+                    .content-wrapper { width: 95%; }
+                    .report-header { height: 80px; margin-bottom: 20px; } /* Espaço para a logo */
+                    .report-title { text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 20px; }
                     table { width: 100%; border-collapse: collapse; }
-                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 10px; }
+                    th, td { border: 1px solid #ddd; padding: 6px; text-align: left; font-size: 9px; }
                     th { background-color: #f2f2f2; }
                     tfoot { font-weight: bold; }
-                    @page { size: landscape; margin: 20mm; }
+                    @page { size: landscape; margin: 15mm; }
                 </style>
             `);
-            printWindow.document.write('</head><body>');
+            printWindow.document.write('</head><body><div class="content-wrapper">');
             printWindow.document.write('<div class="report-header"></div>');
             printWindow.document.write(`<div class="report-title">Relatório de Atendimentos - ${monthName}/${year}</div>`);
             let tableHTML = '<table><thead><tr>';
@@ -421,9 +420,7 @@
                     </tr>
                 </tfoot>
             `;
-            tableHTML += '</table>';
-            printWindow.document.write(tableHTML);
-            printWindow.document.write('</body></html>');
+            tableHTML += '</table></div></body></html>';
             printWindow.document.close();
             printWindow.focus();
             setTimeout(() => { printWindow.print(); }, 500);
