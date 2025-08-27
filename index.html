@@ -232,7 +232,7 @@
 
                 const footerRow = document.createElement('tr');
                 footerRow.innerHTML = `
-                    <td class="px-6 py-4 text-right font-bold" colspan="8">Total de Atendimentos: ${filteredData.length}</td>
+                    <td class="px-6 py-4 text-right font-bold" colspan="8">Total de Solicitações: ${filteredData.length}</td>
                     <td class="px-6 py-4 font-bold" colspan="1">Soma Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                 `;
                 tableFooter.appendChild(footerRow);
@@ -481,7 +481,7 @@
                 'CPF do Requerente': '', 'Telefone do Requerente': '',
                 'Falecido(a)': '', 'Bairro': '', 'Idade do Falecido': '', 
                 'Tipo Documento Falecido': '', 'Documento Falecido': '', 
-                'Data do Óbito': 'Total de Atendimentos:', 'Qtd. de Ônibus': dataToExport.length, 'Valor': totalValor
+                'Data do Óbito': 'Total de Solicitações:', 'Qtd. de Ônibus': dataToExport.length, 'Valor': totalValor
             });
 
             const worksheet = XLSX.utils.json_to_sheet(mappedData);
@@ -560,7 +560,7 @@
             const fullHtml = `
                 <html>
                     <head>
-                        <title>Relatório de Atendimentos - ${tipo}</title>
+                        <title>Relatório de Solicitações - ${tipo}</title>
                         <style>
                             body { font-family: Arial, sans-serif; }
                             .content-wrapper { width: 95%; margin: 0 auto; }
@@ -579,7 +579,7 @@
                             <div class="report-header">
                                 <img src="logo.png" alt="Logo">
                             </div>
-                            <div class="report-title">Relatório de Atendimentos de ${tipo.toUpperCase()} - ${monthName}/${year}</div>
+                            <div class="report-title">Relatório de Solicitações de ${tipo.toUpperCase()} - ${monthName}/${year}</div>
                             <table>
                                 <thead>
                                     <tr>
@@ -591,7 +591,7 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="${headers.length - 1}" style="text-align: right;">Total de Atendimentos: ${dataToPrint.length}</td>
+                                        <td colspan="${headers.length - 1}" style="text-align: right;">Total de Solicitações: ${dataToPrint.length}</td>
                                         <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                     </tr>
                                 </tfoot>
