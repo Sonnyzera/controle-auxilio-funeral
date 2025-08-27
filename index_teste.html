@@ -40,7 +40,7 @@
         <header class="flex justify-between items-center mb-8">
             <div class="text-left">
                  <h1 class="text-3xl font-bold text-red-500">AMBIENTE DE TESTE</h1>
-                 <p class="text-md text-gray-500 mt-1">Dados salvos e acessados diretamente da nuvem.</p>
+                 <p class="text-md text-gray-500 mt-1">Dados salvos e acessados do banco de dados de TESTE.</p>
             </div>
             <button id="logout-button" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm">
                 Sair
@@ -49,7 +49,7 @@
 
         <!-- Formulário -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 class="text-xl font-semibold mb-4 border-b pb-2">Adicionar Novo Registro</h2>
+            <h2 class="text-xl font-semibold mb-4 border-b pb-2">Adicionar Novo Registro de Teste</h2>
             <form id="data-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="md:col-span-4">
                     <label class="block text-sm font-medium text-gray-600 mb-2">Tipo de Registro <span class="text-red-500">*</span></label>
@@ -80,7 +80,7 @@
         <!-- Tabela -->
         <div class="bg-white p-6 rounded-lg shadow-md">
              <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-4 mb-4">
-                <h2 class="text-xl font-semibold">Registros Salvos</h2>
+                <h2 class="text-xl font-semibold">Registros Salvos (Teste)</h2>
                 <div class="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-2">
                     <div class="w-full sm:w-auto flex items-center gap-2"><select id="month-filter" class="w-full p-2 border rounded-md"><option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select><input type="number" id="year-filter" placeholder="Ano" class="p-2 border rounded-md w-24"></div>
                     <div class="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
@@ -112,6 +112,9 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // --- NOME DA COLEÇÃO DE TESTE ---
+        const collectionName = "registros_teste";
+
         // --- DOM ELEMENTS ---
         const form = document.getElementById('data-form');
         const tableBody = document.getElementById('data-table-body');
@@ -141,7 +144,7 @@
 
         // --- FIRESTORE LOGIC ---
         const carregarDados = async () => {
-            const q = query(collection(db, "registros"), orderBy("dataSolicitacao", "desc"));
+            const q = query(collection(db, collectionName), orderBy("dataSolicitacao", "desc"));
             const querySnapshot = await getDocs(q);
             dataStore = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderTable();
@@ -149,14 +152,14 @@
 
         const adicionarRegistro = async (novoRegistro) => {
             try {
-                await addDoc(collection(db, "registros"), novoRegistro);
+                await addDoc(collection(db, collectionName), novoRegistro);
                 carregarDados();
             } catch (e) { console.error("Erro ao adicionar documento: ", e); }
         };
 
         const deletarRegistro = async (id) => {
             if (!confirm('Tem certeza que deseja excluir este registro?')) return;
-            await deleteDoc(doc(db, "registros", id));
+            await deleteDoc(doc(db, collectionName, id));
             carregarDados();
         };
 
@@ -206,7 +209,7 @@
                 tipoDocumentoFalecido: form['tipo-documento-falecido'].value,
                 documentoFalecido: form['documento-falecido'].value,
                 dataObito: form['data-obito'].value,
-                onibus: tipoSelecionado === 'Translado' ? form.onibus.value : '0', // Salva 0 para Urna
+                onibus: tipoSelecionado === 'Translado' ? form.onibus.value : '0',
                 valor: isNaN(valorNumerico) ? 0 : valorNumerico
             };
             adicionarRegistro(novoRegistro);
