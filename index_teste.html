@@ -370,28 +370,8 @@
             let totalValor = 0;
 
             const printWindow = window.open('', '', 'height=600,width=800');
-            printWindow.document.write('<html><head><title>Relatório de Atendimentos</title>');
-            printWindow.document.write(`
-                <style>
-                    body { font-family: Arial, sans-serif; }
-                    .content-wrapper { width: 95%; margin: 0 auto; }
-                    .report-header { height: 80px; margin-bottom: 20px; } /* Espaço para a logo */
-                    .report-title { text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 20px; }
-                    table { width: 100%; border-collapse: collapse; }
-                    th, td { border: 1px solid #ddd; padding: 6px; text-align: left; font-size: 9px; }
-                    th { background-color: #f2f2f2; text-align: center; }
-                    tfoot { font-weight: bold; }
-                    @page { size: landscape; margin: 15mm; }
-                </style>
-            `);
-            printWindow.document.write('</head><body><div class="content-wrapper">');
-            printWindow.document.write('<div class="report-header"></div>');
-            printWindow.document.write(`<div class="report-title">Relatório de Atendimentos - ${monthName}/${year}</div>`);
-            let tableHTML = '<table><thead><tr>';
-            const headers = ['Nº', 'Nº Reg.', 'Tipo', 'Origem', 'Data Solic.', 'Requerente', 'Falecido(a)', 'Idade', 'Documento', 'Telefone', 'Valor'];
-            headers.forEach(h => tableHTML += `<th>${h}</th>`);
-            tableHTML += '</tr></thead><tbody>';
-
+            
+            let tableHTML = '';
             data.forEach((row, index) => {
                 totalValor += parseFloat(row.valor) || 0;
                 tableHTML += `
@@ -411,19 +391,52 @@
                 `;
             });
 
-            tableHTML += '</tbody>';
-            tableHTML += `
-                <tfoot>
-                    <tr>
-                        <td colspan="10" style="text-align: right;">Total de Atendimentos: ${data.length}</td>
-                        <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                    </tr>
-                </tfoot>
-            `;
-            tableHTML += '</table></div></body></html>';
+            const fullHtml = `
+                <html>
+                    <head>
+                        <title>Relatório de Atendimentos</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; }
+                            .content-wrapper { width: 95%; margin: 0 auto; }
+                            .report-header { height: 80px; margin-bottom: 20px; }
+                            .report-title { text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 20px; }
+                            table { width: 100%; border-collapse: collapse; }
+                            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; font-size: 9px; }
+                            th { background-color: #f2f2f2; text-align: center; }
+                            tfoot { font-weight: bold; }
+                            @page { size: landscape; margin: 15mm; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="content-wrapper">
+                            <div class="report-header"></div>
+                            <div class="report-title">Relatório de Atendimentos - ${monthName}/${year}</div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nº</th><th>Nº Reg.</th><th>Tipo</th><th>Origem</th><th>Data Solic.</th><th>Requerente</th><th>Falecido(a)</th><th>Idade</th><th>Documento</th><th>Telefone</th><th>Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tableHTML}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="10" style="text-align: right;">Total de Atendimentos: ${data.length}</td>
+                                        <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </body>
+                </html>`;
+
+            printWindow.document.write(fullHtml);
             printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => { printWindow.print(); }, 500);
+            printWindow.onload = function() {
+                printWindow.focus();
+                printWindow.print();
+            };
         };
         
         document.getElementById('export-urna').addEventListener('click', () => exportToXLSX('Urna'));
