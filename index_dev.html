@@ -72,7 +72,7 @@
                 <div><label for="telefone-requerente" class="block text-sm font-medium">Telefone</label><input type="tel" id="telefone-requerente" placeholder="(00) 00000-0000" class="mt-1 block w-full p-2 border rounded-md"></div>
                 <div><label for="falecido" class="block text-sm font-medium">Falecido(a)</label><input type="text" id="falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 <div><label for="bairro-falecido" class="block text-sm font-medium">Bairro</label><input type="text" id="bairro-falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
-                <div><label for="idade-falecido" class="block text-sm font-medium">Idade (Falecido)</label><input type="number" id="idade-falecido" min="0" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                <div id="idade-container"><label for="idade-falecido" class="block text-sm font-medium">Idade (Falecido)</label><input type="number" id="idade-falecido" min="0" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 <div class="md:col-span-2 grid grid-cols-2 gap-2">
                     <div><label for="tipo-documento-falecido" class="block text-sm font-medium">Documento</label><select id="tipo-documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required><option value="" disabled selected>Selecione...</option><option value="CPF">CPF</option><option value="RG">RG</option><option value="Certidao">Certidão Nasc.</option></select></div>
                     <div><label for="documento-falecido" class="block text-sm font-medium">Número</label><input type="text" id="documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
@@ -138,6 +138,8 @@
         const printTransladoBtn = document.getElementById('print-translado');
         const onibusContainer = document.getElementById('onibus-container');
         const onibusInput = document.getElementById('onibus');
+        const idadeContainer = document.getElementById('idade-container');
+        const idadeInput = document.getElementById('idade-falecido');
         const editModal = document.getElementById('edit-modal');
         const editFormContainer = document.getElementById('edit-form');
         const cancelEditBtn = document.getElementById('cancel-edit-button');
@@ -260,7 +262,7 @@
                 telefoneRequerente: form['telefone-requerente'].value,
                 falecido: form.falecido.value,
                 bairroFalecido: form['bairro-falecido'].value,
-                idadeFalecido: form['idade-falecido'].value,
+                idadeFalecido: tipoSelecionado === 'Urna' ? form['idade-falecido'].value : '',
                 tipoDocumentoFalecido: form['tipo-documento-falecido'].value,
                 documentoFalecido: form['documento-falecido'].value,
                 dataObito: form['data-obito'].value,
@@ -299,6 +301,8 @@
             const editOrigemSelect = editForm.querySelector('#origem-solicitacao');
             const editOnibusContainer = editForm.querySelector('#onibus-container');
             const editOnibusInput = editForm.querySelector('#onibus');
+            const editIdadeContainer = editForm.querySelector('#idade-container');
+            const editIdadeInput = editForm.querySelector('#idade-falecido');
             const editValorInput = editForm.querySelector('#valor');
 
             const handleEditTipoChange = () => {
@@ -308,11 +312,15 @@
                     editOrigemSelect.disabled = false;
                     editOnibusContainer.classList.add('hidden');
                     editOnibusInput.required = false;
+                    editIdadeContainer.classList.remove('hidden');
+                    editIdadeInput.required = true;
                 } else if (tipoSelecionado === 'Translado') {
                     editOrigemSelect.innerHTML = '<option selected>SEMDESC</option>';
                     editOrigemSelect.disabled = true;
                     editOnibusContainer.classList.remove('hidden');
                     editOnibusInput.required = true;
+                    editIdadeContainer.classList.add('hidden');
+                    editIdadeInput.required = false;
                 }
             };
             
@@ -329,7 +337,7 @@
             editForm.querySelector('#telefone-requerente').value = record.telefoneRequerente || '';
             editForm.querySelector('#falecido').value = record.falecido || '';
             editForm.querySelector('#bairro-falecido').value = record.bairroFalecido || '';
-            editForm.querySelector('#idade-falecido').value = record.idadeFalecido || '';
+            editIdadeInput.value = record.idadeFalecido || '';
             editForm.querySelector('#tipo-documento-falecido').value = record.tipoDocumentoFalecido || '';
             editForm.querySelector('#documento-falecido').value = record.documentoFalecido || '';
             editForm.querySelector('#data-obito').value = record.dataObito || '';
@@ -362,7 +370,7 @@
                 telefoneRequerente: editForm.querySelector('#telefone-requerente').value,
                 falecido: editForm.querySelector('#falecido').value,
                 bairroFalecido: editForm.querySelector('#bairro-falecido').value,
-                idadeFalecido: editForm.querySelector('#idade-falecido').value,
+                idadeFalecido: tipoSelecionado === 'Urna' ? editForm.querySelector('#idade-falecido').value : '',
                 tipoDocumentoFalecido: editForm.querySelector('#tipo-documento-falecido').value,
                 documentoFalecido: editForm.querySelector('#documento-falecido').value,
                 dataObito: editForm.querySelector('#data-obito').value,
@@ -417,15 +425,21 @@
                 origemSelect.disabled = false;
                 onibusContainer.classList.add('hidden');
                 onibusInput.required = false;
+                idadeContainer.classList.remove('hidden');
+                idadeInput.required = true;
             } else if (tipoSelecionado === 'Translado') {
                 origemSelect.innerHTML = '<option selected>SEMDESC</option>';
                 origemSelect.disabled = true;
                 onibusContainer.classList.remove('hidden');
                 onibusInput.required = true;
+                idadeContainer.classList.add('hidden');
+                idadeInput.required = false;
             } else {
                  origemSelect.innerHTML = '';
                  onibusContainer.classList.add('hidden');
                  onibusInput.required = false;
+                 idadeContainer.classList.add('hidden');
+                 idadeInput.required = false;
             }
         };
         tipoRadios.forEach(radio => radio.addEventListener('change', handleTipoChange));
@@ -455,52 +469,75 @@
             if (!filteredResult) return;
 
             const { data, month, year } = filteredResult;
-            const dataToExport = data.filter(row => row.tipo === tipo);
+            let dataToExport = data.filter(row => row.tipo === tipo);
 
             if (dataToExport.length === 0) {
                 alert(`Nenhum registro do tipo "${tipo}" encontrado para ${month}/${year}.`);
                 return;
             }
             
+            // Ordena os dados por data de solicitação (ascendente)
+            dataToExport.sort((a, b) => new Date(a.dataSolicitacao) - new Date(b.dataSolicitacao));
+
             const formatDateForExcel = (dateStr) => dateStr ? new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR') : '';
             let totalValor = 0;
 
             const mappedData = dataToExport.map((row, index) => {
                 totalValor += parseFloat(row.valor) || 0;
-                return {
-                'Nº': index + 1, 'Nº Registro': row.numeroRegistro, 'Tipo': row.tipo, 'Origem da Solicitação': row.origemSolicitacao, 
-                'Data da Solicitação': formatDateForExcel(row.dataSolicitacao), 'Requerente': row.requerente, 
-                'CPF do Requerente': row.cpfRequerente, 'Telefone do Requerente': row.telefoneRequerente,
-                'Falecido(a)': row.falecido, 'Bairro': row.bairroFalecido, 'Idade do Falecido': row.idadeFalecido ? `${row.idadeFalecido} ANOS` : '', 
-                'Tipo Documento Falecido': row.tipoDocumentoFalecido, 'Documento Falecido': row.documentoFalecido, 
-                'Data do Óbito': formatDateForExcel(row.dataObito), 'Qtd. de Ônibus': row.onibus, 'Valor': row.valor
-            }});
+                
+                const baseRecord = {
+                    'Nº': index + 1,
+                    'Nº Reg.': row.numeroRegistro,
+                    'Data da Solicitação': formatDateForExcel(row.dataSolicitacao),
+                    'Requerente': row.requerente,
+                    'CPF do Requerente': row.cpfRequerente,
+                    'Telefone': row.telefoneRequerente,
+                    'Falecido(a)': row.falecido,
+                    'Documento do Falecido': row.documentoFalecido,
+                };
 
-            mappedData.push({
-                'Nº': '', 'Nº Registro': '', 'Tipo': '', 'Origem da Solicitação': '', 
-                'Data da Solicitação': '', 'Requerente': '', 
-                'CPF do Requerente': '', 'Telefone do Requerente': '',
-                'Falecido(a)': '', 'Bairro': '', 'Idade do Falecido': '', 
-                'Tipo Documento Falecido': '', 'Documento Falecido': '', 
-                'Data do Óbito': 'Total de Solicitações:', 'Qtd. de Ônibus': dataToExport.length, 'Valor': totalValor
+                if (tipo === 'Urna') {
+                    baseRecord['Idade'] = row.idadeFalecido ? `${row.idadeFalecido} ANOS` : '';
+                }
+
+                baseRecord['Data do Óbito'] = formatDateForExcel(row.dataObito);
+                baseRecord['Bairro'] = row.bairroFalecido;
+
+                if (tipo === 'Translado') {
+                    baseRecord['Ônibus'] = row.onibus;
+                }
+                
+                baseRecord['Valor'] = row.valor;
+
+                return baseRecord;
             });
 
+            // Adiciona a linha de total
+            const summaryRow = {};
+            const columns = Object.keys(mappedData[0] || {});
+            summaryRow[columns[columns.length - 3]] = 'Total de Solicitações:';
+            summaryRow[columns[columns.length - 2]] = dataToExport.length;
+            summaryRow[columns[columns.length - 1]] = totalValor;
+            mappedData.push(summaryRow);
+
             const worksheet = XLSX.utils.json_to_sheet(mappedData);
-            worksheet['!cols'] = [ {wch:5}, {wch:10}, {wch:10}, {wch:20}, {wch:20}, {wch:25}, {wch:20}, {wch:25}, {wch:25}, {wch:15}, {wch:20}, {wch:20}, {wch:20}, {wch:15}, {wch:15}, {wch:15} ];
             
+            // Ajusta a largura das colunas
+            worksheet['!cols'] = [ {wch:5}, {wch:10}, {wch:20}, {wch:25}, {wch:20}, {wch:20}, {wch:25}, {wch:25}, {wch:15}, {wch:20}, {wch:20}, {wch:15}, {wch:15} ];
+            
+            // Formata a coluna de valor como moeda
             dataToExport.forEach((row, index) => {
-                const cellRef = XLSX.utils.encode_cell({c: 15, r: index + 1});
+                const cellRef = XLSX.utils.encode_cell({c: columns.length - 1, r: index + 1});
                 if(worksheet[cellRef]) {
                     worksheet[cellRef].t = 'n';
                     worksheet[cellRef].z = 'R$ #,##0.00';
                 }
             });
-            const totalCellRef = XLSX.utils.encode_cell({c: 15, r: dataToExport.length + 1});
+            const totalCellRef = XLSX.utils.encode_cell({c: columns.length - 1, r: dataToExport.length + 1});
             if(worksheet[totalCellRef]) {
                 worksheet[totalCellRef].t = 'n';
                 worksheet[totalCellRef].z = 'R$ #,##0.00';
             }
-
 
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, tipo);
@@ -512,12 +549,15 @@
             if (!filteredResult) return;
             
             const { data, month, year } = filteredResult;
-            const dataToPrint = data.filter(row => row.tipo === tipo);
+            let dataToPrint = data.filter(row => row.tipo === tipo);
 
             if (dataToPrint.length === 0) {
                 alert(`Nenhum registro do tipo "${tipo}" encontrado para ${month}/${year} para imprimir.`);
                 return;
             }
+            
+            // Ordena os dados por data de solicitação (ascendente)
+            dataToPrint.sort((a, b) => new Date(a.dataSolicitacao) - new Date(b.dataSolicitacao));
 
             const monthNames = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
             const monthName = monthNames[month - 1];
@@ -526,10 +566,16 @@
             const printWindow = window.open('', '', 'height=600,width=800');
             
             let tableHTML = '';
-            let headers = ['Nº', 'Nº Reg.', 'Origem', 'Data Solic.', 'Requerente', 'CPF Req.', 'Telefone', 'Falecido(a)', 'Bairro', 'Idade', 'Documento', 'Data Óbito', 'Valor'];
-            if (tipo === 'Translado') {
-                headers.splice(12, 0, 'Qtd. Ônibus');
+            let headers = ['Nº', 'Nº Reg.', 'Data da Solicitação', 'Requerente', 'CPF do Requerente', 'Telefone', 'Falecido(a)', 'Documento do Falecido'];
+            if (tipo === 'Urna') {
+                 headers.push('Idade');
             }
+            headers.push('Data do Óbito', 'Bairro');
+            if (tipo === 'Translado') {
+                headers.push('Ônibus');
+            }
+            headers.push('Valor');
+
 
             dataToPrint.forEach((row, index) => {
                 totalValor += parseFloat(row.valor) || 0;
@@ -537,16 +583,19 @@
                     <tr>
                         <td>${index + 1}</td>
                         <td>${row.numeroRegistro || ''}</td>
-                        <td>${row.origemSolicitacao || ''}</td>
                         <td>${row.dataSolicitacao ? new Date(row.dataSolicitacao + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
                         <td>${row.requerente || ''}</td>
                         <td>${row.cpfRequerente || ''}</td>
                         <td>${row.telefoneRequerente || ''}</td>
                         <td>${row.falecido || ''}</td>
-                        <td>${row.bairroFalecido || ''}</td>
-                        <td>${row.idadeFalecido ? row.idadeFalecido + ' ANOS' : ''}</td>
                         <td>${row.documentoFalecido || ''}</td>
-                        <td>${row.dataObito ? new Date(row.dataObito + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
+                `;
+                if (tipo === 'Urna') {
+                    rowHTML += `<td>${row.idadeFalecido ? row.idadeFalecido + ' ANOS' : ''}</td>`;
+                }
+                rowHTML += `
+                    <td>${row.dataObito ? new Date(row.dataObito + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
+                    <td>${row.bairroFalecido || ''}</td>
                 `;
                 if (tipo === 'Translado') {
                     rowHTML += `<td>${row.onibus || '0'}</td>`;
@@ -566,7 +615,7 @@
                             body { font-family: Arial, sans-serif; }
                             .content-wrapper { width: 95%; margin: 0 auto; }
                             .report-header { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
-                            .report-header img { height: 2.49cm; width: 18.46cm; object-fit: contain; }
+                            .report-header img { height: 2.86cm; width: 21.59cm; object-fit: contain; }
                             .report-title { text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 20px; }
                             table { width: 100%; border-collapse: collapse; }
                             th, td { border: 1px solid #ddd; padding: 6px; text-align: center; font-size: 9px; white-space: nowrap; }
@@ -615,7 +664,7 @@
         printTransladoBtn.addEventListener('click', () => printReport('Translado'));
         
         const setInitialDateFilters = () => {
-            const today = new new Date()();
+            const today = new Date();
             document.getElementById('month-filter').value = today.getMonth() + 1;
             document.getElementById('year-filter').value = today.getFullYear();
         };
