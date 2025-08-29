@@ -148,17 +148,44 @@
         let dataStore = [];
         let currentEditingId = null;
 
-        // --- AUTHENTICATION ---
+        // --- AUTHENTICATION & SESSION TIMEOUT ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                // Define a duração máxima da sessão (8 horas em milissegundos)
+                const maxSessionDuration = 8 * 60 * 60 * 1000; 
+                const loginTimestamp = localStorage.getItem('loginTimestamp');
+
+                if (loginTimestamp) {
+                    const loginTime = parseInt(loginTimestamp);
+                    const currentTime = Date.now();
+
+                    if ((currentTime - loginTime) > maxSessionDuration) {
+                        // A sessão expirou, faz o logout
+                        console.log("Sessão expirada. Desconectando...");
+                        signOut(auth); 
+                        return; 
+                    }
+                } else {
+                    // Se não há um timestamp, é um novo login. Armazena a hora atual.
+                    localStorage.setItem('loginTimestamp', Date.now());
+                }
+
+                // Se a sessão for válida, exibe o conteúdo da página e carrega os dados
                 document.body.style.visibility = 'visible';
                 carregarDados();
+
             } else {
+                // Se não há utilizador, limpa o timestamp e redireciona para o login
+                localStorage.removeItem('loginTimestamp');
                 window.location.href = '/login.html';
             }
         });
 
-        document.getElementById('logout-button').addEventListener('click', () => signOut(auth));
+        document.getElementById('logout-button').addEventListener('click', () => {
+            // Limpa o timestamp ao clicar em "Sair" e faz o logout
+            localStorage.removeItem('loginTimestamp');
+            signOut(auth);
+        });
 
         // --- FIRESTORE LOGIC ---
         const carregarDados = async () => {
@@ -713,3 +740,4 @@
     </script>
 </body>
 </html>
+
