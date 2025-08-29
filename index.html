@@ -71,7 +71,31 @@
                 <div><label for="cpf-requerente" class="block text-sm font-medium">CPF (Requerente)</label><input type="text" id="cpf-requerente" placeholder="000.000.000-00" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 <div><label for="telefone-requerente" class="block text-sm font-medium">Telefone</label><input type="tel" id="telefone-requerente" placeholder="(00) 00000-0000" class="mt-1 block w-full p-2 border rounded-md"></div>
                 <div><label for="falecido" class="block text-sm font-medium">Falecido(a)</label><input type="text" id="falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
-                <div><label for="bairro-falecido" class="block text-sm font-medium">Bairro</label><input type="text" id="bairro-falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                <div>
+                    <label for="bairro-falecido" class="block text-sm font-medium">Bairro</label>
+                    <select id="bairro-falecido" class="mt-1 block w-full p-2 border rounded-md" required>
+                        <option value="" disabled selected>Selecione o bairro...</option>
+                        <option value="Areia Branca">Areia Branca</option>
+                        <option value="Aracuí">Aracuí</option>
+                        <option value="Barro Duro">Barro Duro</option>
+                        <option value="Buraquinho">Buraquinho</option>
+                        <option value="Caixa d'Água">Caixa d'Água</option>
+                        <option value="Caji">Caji</option>
+                        <option value="Capelão">Capelão</option>
+                        <option value="Centro">Centro</option>
+                        <option value="Ipitanga">Ipitanga</option>
+                        <option value="Itinga">Itinga</option>
+                        <option value="Jambeiro">Jambeiro</option>
+                        <option value="Parque São Paulo">Parque São Paulo</option>
+                        <option value="Pitangueiras">Pitangueiras</option>
+                        <option value="Portão">Portão</option>
+                        <option value="Quingoma">Quingoma</option>
+                        <option value="Recreio Ipitanga">Recreio Ipitanga</option>
+                        <option value="Vida Nova">Vida Nova</option>
+                        <option value="Vila Praiana">Vila Praiana</option>
+                        <option value="Vilas do Atlântico">Vilas do Atlântico</option>
+                    </select>
+                </div>
                 <div id="idade-container"><label for="idade-falecido" class="block text-sm font-medium">Idade (Falecido)</label><input type="number" id="idade-falecido" min="0" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 <div class="md:col-span-2 grid grid-cols-2 gap-2">
                     <div><label for="tipo-documento-falecido" class="block text-sm font-medium">Documento</label><select id="tipo-documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required><option value="" disabled selected>Selecione...</option><option value="CPF">CPF</option><option value="RG">RG</option><option value="Certidao">Certidão Nasc.</option></select></div>
@@ -437,7 +461,7 @@
         };
 
         ['cpf-requerente', 'telefone-requerente', 'documento-falecido', 'numero-registro'].forEach(id => document.getElementById(id).addEventListener('input', applyMask));
-        ['requerente', 'falecido', 'bairro-falecido'].forEach(id => document.getElementById(id).addEventListener('input', formatNames));
+        ['requerente', 'falecido'].forEach(id => document.getElementById(id).addEventListener('input', formatNames));
         
         tipoDocumentoFalecidoSelect.addEventListener('change', () => {
             documentoFalecidoInput.value = '';
