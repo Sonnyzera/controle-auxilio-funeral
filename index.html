@@ -96,7 +96,17 @@
                         <option value="Vilas do Atlântico">Vilas do Atlântico</option>
                     </select>
                 </div>
-                <div id="idade-container"><label for="idade-falecido" class="block text-sm font-medium">Idade (Falecido)</label><input type="number" id="idade-falecido" min="0" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                <div id="idade-container">
+                    <label for="idade-falecido" class="block text-sm font-medium">Idade (Falecido)</label>
+                    <div class="flex items-center mt-1 space-x-2">
+                        <input type="number" id="idade-falecido" min="0" class="block w-full p-2 border rounded-md" required>
+                        <select id="idade-unidade" class="block w-full p-2 border rounded-md">
+                            <option value="ANOS" selected>Anos</option>
+                            <option value="MESES">Meses</option>
+                            <option value="DIAS">Dias</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="md:col-span-2 grid grid-cols-2 gap-2">
                     <div><label for="tipo-documento-falecido" class="block text-sm font-medium">Documento</label><select id="tipo-documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required><option value="" disabled selected>Selecione...</option><option value="CPF">CPF</option><option value="RG">RG</option><option value="Certidao">Certidão Nasc.</option></select></div>
                     <div><label for="documento-falecido" class="block text-sm font-medium">Número</label><input type="text" id="documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
@@ -274,7 +284,7 @@
                         <td class="px-6 py-4">${formatDate(rowData.dataSolicitacao)}</td>
                         <td class="px-6 py-4">${rowData.requerente}</td>
                         <td class="px-6 py-4">${rowData.falecido}</td>
-                        <td class="px-6 py-4">${rowData.idadeFalecido ? rowData.idadeFalecido + ' ANOS' : ''}</td>
+                        <td class="px-6 py-4">${rowData.idadeFalecido ? rowData.idadeFalecido + ' ' + (rowData.idadeUnidade || 'ANOS') : ''}</td>
                         <td class="px-6 py-4">
                             <button data-id="${rowData.id}" class="text-blue-600 hover:text-blue-900 edit-btn mr-2">Editar</button>
                             <button data-id="${rowData.id}" class="text-red-600 hover:text-red-900 delete-btn">Excluir</button>
@@ -313,6 +323,7 @@
                 falecido: form.falecido.value,
                 bairroFalecido: form['bairro-falecido'].value,
                 idadeFalecido: tipoSelecionado === 'Urna' ? form['idade-falecido'].value : '',
+                idadeUnidade: tipoSelecionado === 'Urna' ? form['idade-unidade'].value : '',
                 tipoDocumentoFalecido: form['tipo-documento-falecido'].value,
                 documentoFalecido: form['documento-falecido'].value,
                 dataObito: form['data-obito'].value,
@@ -353,6 +364,7 @@
             const editOnibusInput = editForm.querySelector('#onibus');
             const editIdadeContainer = editForm.querySelector('#idade-container');
             const editIdadeInput = editForm.querySelector('#idade-falecido');
+            const editIdadeUnidadeSelect = editForm.querySelector('#idade-unidade');
             const editValorInput = editForm.querySelector('#valor');
 
             const handleEditTipoChange = () => {
@@ -388,6 +400,9 @@
             editForm.querySelector('#falecido').value = record.falecido || '';
             editForm.querySelector('#bairro-falecido').value = record.bairroFalecido || '';
             editIdadeInput.value = record.idadeFalecido || '';
+            if (editIdadeUnidadeSelect) {
+                editIdadeUnidadeSelect.value = record.idadeUnidade || 'ANOS';
+            }
             editForm.querySelector('#tipo-documento-falecido').value = record.tipoDocumentoFalecido || '';
             editForm.querySelector('#documento-falecido').value = record.documentoFalecido || '';
             editForm.querySelector('#data-obito').value = record.dataObito || '';
@@ -421,6 +436,7 @@
                 falecido: editForm.querySelector('#falecido').value,
                 bairroFalecido: editForm.querySelector('#bairro-falecido').value,
                 idadeFalecido: tipoSelecionado === 'Urna' ? editForm.querySelector('#idade-falecido').value : '',
+                idadeUnidade: tipoSelecionado === 'Urna' ? editForm.querySelector('#idade-unidade').value : '',
                 tipoDocumentoFalecido: editForm.querySelector('#tipo-documento-falecido').value,
                 documentoFalecido: editForm.querySelector('#documento-falecido').value,
                 dataObito: editForm.querySelector('#data-obito').value,
@@ -547,7 +563,7 @@
                 };
 
                 if (tipo === 'Urna') {
-                    baseRecord['Idade'] = row.idadeFalecido ? `${row.idadeFalecido} ANOS` : '';
+                    baseRecord['Idade'] = row.idadeFalecido ? `${row.idadeFalecido} ${row.idadeUnidade || 'ANOS'}` : '';
                 }
 
                 baseRecord['Data do Óbito'] = formatDateForExcel(row.dataObito);
@@ -641,7 +657,7 @@
                         <td>${row.documentoFalecido || ''}</td>
                 `;
                 if (tipo === 'Urna') {
-                    rowHTML += `<td>${row.idadeFalecido ? row.idadeFalecido + ' ANOS' : ''}</td>`;
+                    rowHTML += `<td>${row.idadeFalecido ? row.idadeFalecido + ' ' + (row.idadeUnidade || 'ANOS') : ''}</td>`;
                 }
                 rowHTML += `
                     <td>${row.dataObito ? new Date(row.dataObito + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
