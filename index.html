@@ -663,7 +663,7 @@
                 return chunks;
             };
 
-            const chunks = chunkArray(dataToPrint, 30); // divide em páginas de 30
+            const chunks = chunkArray(dataToPrint, 25); // divide em páginas de 25
             let tablesHTML = '';
 
             let headers = ['Nº', 'Nº Reg.', 'Data da Solicitação', 'Requerente', 'CPF do Requerente', 'Telefone', 'Falecido(a)', 'Documento do Falecido'];
@@ -717,7 +717,7 @@
                             <tfoot>
                                 <tr>
                                     <td colspan="${headers.length - 1}" style="text-align: right;">Total de Solicitações: ${dataToPrint.length}</td>
-                                    <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                    <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', 'BRL' })}</td>
                                 </tr>
                             </tfoot>
                         ` : ''}
@@ -761,11 +761,13 @@
                             tfoot { display: table-row-group; } /* Garante que o rodapé apareça logo após o corpo da tabela */
                             th, td { 
                                 border: 1px solid #ddd; 
-                                padding: 4px; 
+                                padding: 8px; 
                                 text-align: center; 
                                 font-size: 11px; 
                                 white-space: normal;  /* Permite quebra de linha automática */
                                 word-wrap: break-word; /* Força a quebra de palavras longas */
+                                height: 2.5em; /* Altura de linha padronizada */
+                                vertical-align: middle; /* Alinha o conteúdo verticalmente */
                             }
                             th { background-color: #f2f2f2; }
                             tfoot { font-weight: bold; }
@@ -806,3 +808,4 @@
     </script>
 </body>
 </html>
+
