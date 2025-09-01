@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Dados - Auxílio Funeral (Desenvolvimento)</title>
+    <title>Controle de Dados (TESTE) - Auxílio Funeral</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -51,8 +51,8 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="flex justify-between items-center mb-8">
             <div class="text-left">
-                 <h1 class="text-3xl font-bold text-gray-700">Controle e Exportação de Dados (DEV)</h1>
-                 <p class="text-md text-gray-500 mt-1">Dados salvos e acessados do banco de dados de desenvolvimento.</p>
+                 <h1 class="text-3xl font-bold text-red-500">AMBIENTE DE TESTE</h1>
+                 <p class="text-md text-gray-500 mt-1">Dados salvos e acessados do banco de dados de TESTE.</p>
             </div>
             <button id="logout-button" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm">
                 Sair
@@ -61,7 +61,7 @@
 
         <!-- Formulário de Adição -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 class="text-xl font-semibold mb-4 border-b pb-2">Adicionar Novo Registro</h2>
+            <h2 class="text-xl font-semibold mb-4 border-b pb-2">Adicionar Novo Registro de Teste</h2>
             <form id="data-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="md:col-span-4"><label class="block text-sm font-medium text-gray-600 mb-2">Tipo de Registro <span class="text-red-500">*</span></label><div class="flex items-center space-x-4"><label class="flex items-center"><input type="radio" name="tipo" value="Urna" class="h-4 w-4" required> <span class="ml-2">Urna</span></label><label class="flex items-center"><input type="radio" name="tipo" value="Translado" class="h-4 w-4" required> <span class="ml-2">Translado</span></label></div></div>
                 <div id="origem-container"><label for="origem-solicitacao" class="block text-sm font-medium">Origem</label><select id="origem-solicitacao" class="mt-1 block w-full p-2 border rounded-md" required></select></div>
@@ -71,8 +71,42 @@
                 <div><label for="cpf-requerente" class="block text-sm font-medium">CPF (Requerente)</label><input type="text" id="cpf-requerente" placeholder="000.000.000-00" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 <div><label for="telefone-requerente" class="block text-sm font-medium">Telefone</label><input type="tel" id="telefone-requerente" placeholder="(00) 00000-0000" class="mt-1 block w-full p-2 border rounded-md"></div>
                 <div><label for="falecido" class="block text-sm font-medium">Falecido(a)</label><input type="text" id="falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
-                <div><label for="bairro-falecido" class="block text-sm font-medium">Bairro</label><input type="text" id="bairro-falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
-                <div id="idade-container"><label for="idade-falecido" class="block text-sm font-medium">Idade (Falecido)</label><input type="number" id="idade-falecido" min="0" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                <div>
+                    <label for="bairro-falecido" class="block text-sm font-medium">Bairro</label>
+                    <select id="bairro-falecido" class="mt-1 block w-full p-2 border rounded-md" required>
+                        <option value="" disabled selected>Selecione o bairro...</option>
+                        <option value="Areia Branca">Areia Branca</option>
+                        <option value="Aracuí">Aracuí</option>
+                        <option value="Barro Duro">Barro Duro</option>
+                        <option value="Buraquinho">Buraquinho</option>
+                        <option value="Caixa d'Água">Caixa d'Água</option>
+                        <option value="Caji">Caji</option>
+                        <option value="Capelão">Capelão</option>
+                        <option value="Centro">Centro</option>
+                        <option value="Ipitanga">Ipitanga</option>
+                        <option value="Itinga">Itinga</option>
+                        <option value="Jambeiro">Jambeiro</option>
+                        <option value="Parque São Paulo">Parque São Paulo</option>
+                        <option value="Pitangueiras">Pitangueiras</option>
+                        <option value="Portão">Portão</option>
+                        <option value="Quingoma">Quingoma</option>
+                        <option value="Recreio Ipitanga">Recreio Ipitanga</option>
+                        <option value="Vida Nova">Vida Nova</option>
+                        <option value="Vila Praiana">Vila Praiana</option>
+                        <option value="Vilas do Atlântico">Vilas do Atlântico</option>
+                    </select>
+                </div>
+                <div id="idade-container">
+                    <label for="idade-falecido" class="block text-sm font-medium">Idade (Falecido)</label>
+                    <div class="flex items-center mt-1 space-x-2">
+                        <input type="number" id="idade-falecido" min="0" class="block w-full p-2 border rounded-md" required>
+                        <select id="idade-unidade" class="block w-full p-2 border rounded-md">
+                            <option value="ANOS" selected>Anos</option>
+                            <option value="MESES">Meses</option>
+                            <option value="DIAS">Dias</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="md:col-span-2 grid grid-cols-2 gap-2">
                     <div><label for="tipo-documento-falecido" class="block text-sm font-medium">Documento</label><select id="tipo-documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required><option value="" disabled selected>Selecione...</option><option value="CPF">CPF</option><option value="RG">RG</option><option value="Certidao">Certidão Nasc.</option></select></div>
                     <div><label for="documento-falecido" class="block text-sm font-medium">Número</label><input type="text" id="documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
@@ -87,7 +121,7 @@
         <!-- Tabela -->
         <div class="bg-white p-6 rounded-lg shadow-md">
              <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-4 mb-4">
-                <h2 class="text-xl font-semibold">Registros Salvos</h2>
+                <h2 class="text-xl font-semibold">Registros Salvos (Teste)</h2>
                 <div class="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-2">
                     <input type="text" id="search-filter" placeholder="Pesquisar em todos os registros..." class="w-full sm:w-auto p-2 border rounded-md">
                     <div class="w-full sm:w-auto flex items-center gap-2"><select id="month-filter" class="w-full p-2 border rounded-md"><option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select><input type="number" id="year-filter" placeholder="Ano" class="p-2 border rounded-md w-24"></div>
@@ -121,7 +155,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // IMPORTANTE: Altere para a sua coleção de teste no Firestore
         const collectionName = "registros_teste"; 
 
         // --- DOM ELEMENTS ---
@@ -149,17 +182,44 @@
         let dataStore = [];
         let currentEditingId = null;
 
-        // --- AUTHENTICATION ---
+        // --- AUTHENTICATION & SESSION TIMEOUT ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                // Define a duração máxima da sessão (8 horas em milissegundos)
+                const maxSessionDuration = 8 * 60 * 60 * 1000; 
+                const loginTimestamp = localStorage.getItem('loginTimestamp');
+
+                if (loginTimestamp) {
+                    const loginTime = parseInt(loginTimestamp);
+                    const currentTime = Date.now();
+
+                    if ((currentTime - loginTime) > maxSessionDuration) {
+                        // A sessão expirou, faz o logout
+                        console.log("Sessão expirada. Desconectando...");
+                        signOut(auth); 
+                        return; 
+                    }
+                } else {
+                    // Se não há um timestamp, é um novo login. Armazena a hora atual.
+                    localStorage.setItem('loginTimestamp', Date.now());
+                }
+
+                // Se a sessão for válida, exibe o conteúdo da página e carrega os dados
                 document.body.style.visibility = 'visible';
                 carregarDados();
+
             } else {
+                // Se não há utilizador, limpa o timestamp e redireciona para o login
+                localStorage.removeItem('loginTimestamp');
                 window.location.href = '/login.html';
             }
         });
 
-        document.getElementById('logout-button').addEventListener('click', () => signOut(auth));
+        document.getElementById('logout-button').addEventListener('click', () => {
+            // Limpa o timestamp ao clicar em "Sair" e faz o logout
+            localStorage.removeItem('loginTimestamp');
+            signOut(auth);
+        });
 
         // --- FIRESTORE LOGIC ---
         const carregarDados = async () => {
@@ -224,7 +284,7 @@
                         <td class="px-6 py-4">${formatDate(rowData.dataSolicitacao)}</td>
                         <td class="px-6 py-4">${rowData.requerente}</td>
                         <td class="px-6 py-4">${rowData.falecido}</td>
-                        <td class="px-6 py-4">${rowData.idadeFalecido ? rowData.idadeFalecido + ' ANOS' : ''}</td>
+                        <td class="px-6 py-4">${rowData.idadeFalecido ? rowData.idadeFalecido + ' ' + (rowData.idadeUnidade || 'ANOS') : ''}</td>
                         <td class="px-6 py-4">
                             <button data-id="${rowData.id}" class="text-blue-600 hover:text-blue-900 edit-btn mr-2">Editar</button>
                             <button data-id="${rowData.id}" class="text-red-600 hover:text-red-900 delete-btn">Excluir</button>
@@ -235,7 +295,7 @@
 
                 const footerRow = document.createElement('tr');
                 footerRow.innerHTML = `
-                    <td class="px-6 py-4 text-right font-bold" colspan="8">Total de Solicitações: ${filteredData.length}</td>
+                    <td class="px-6 py-4 text-right font-bold" colspan="8">Total de Atendimentos: ${filteredData.length}</td>
                     <td class="px-6 py-4 font-bold" colspan="1">Soma Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                 `;
                 tableFooter.appendChild(footerRow);
@@ -263,6 +323,7 @@
                 falecido: form.falecido.value,
                 bairroFalecido: form['bairro-falecido'].value,
                 idadeFalecido: tipoSelecionado === 'Urna' ? form['idade-falecido'].value : '',
+                idadeUnidade: tipoSelecionado === 'Urna' ? form['idade-unidade'].value : '',
                 tipoDocumentoFalecido: form['tipo-documento-falecido'].value,
                 documentoFalecido: form['documento-falecido'].value,
                 dataObito: form['data-obito'].value,
@@ -303,6 +364,7 @@
             const editOnibusInput = editForm.querySelector('#onibus');
             const editIdadeContainer = editForm.querySelector('#idade-container');
             const editIdadeInput = editForm.querySelector('#idade-falecido');
+            const editIdadeUnidadeSelect = editForm.querySelector('#idade-unidade');
             const editValorInput = editForm.querySelector('#valor');
 
             const handleEditTipoChange = () => {
@@ -338,6 +400,9 @@
             editForm.querySelector('#falecido').value = record.falecido || '';
             editForm.querySelector('#bairro-falecido').value = record.bairroFalecido || '';
             editIdadeInput.value = record.idadeFalecido || '';
+            if (editIdadeUnidadeSelect) {
+                editIdadeUnidadeSelect.value = record.idadeUnidade || 'ANOS';
+            }
             editForm.querySelector('#tipo-documento-falecido').value = record.tipoDocumentoFalecido || '';
             editForm.querySelector('#documento-falecido').value = record.documentoFalecido || '';
             editForm.querySelector('#data-obito').value = record.dataObito || '';
@@ -371,6 +436,7 @@
                 falecido: editForm.querySelector('#falecido').value,
                 bairroFalecido: editForm.querySelector('#bairro-falecido').value,
                 idadeFalecido: tipoSelecionado === 'Urna' ? editForm.querySelector('#idade-falecido').value : '',
+                idadeUnidade: tipoSelecionado === 'Urna' ? editForm.querySelector('#idade-unidade').value : '',
                 tipoDocumentoFalecido: editForm.querySelector('#tipo-documento-falecido').value,
                 documentoFalecido: editForm.querySelector('#documento-falecido').value,
                 dataObito: editForm.querySelector('#data-obito').value,
@@ -411,7 +477,7 @@
         };
 
         ['cpf-requerente', 'telefone-requerente', 'documento-falecido', 'numero-registro'].forEach(id => document.getElementById(id).addEventListener('input', applyMask));
-        ['requerente', 'falecido', 'bairro-falecido'].forEach(id => document.getElementById(id).addEventListener('input', formatNames));
+        ['requerente', 'falecido'].forEach(id => document.getElementById(id).addEventListener('input', formatNames));
         
         tipoDocumentoFalecidoSelect.addEventListener('change', () => {
             documentoFalecidoInput.value = '';
@@ -476,8 +542,8 @@
                 return;
             }
             
-            // Ordena os dados por data de solicitação (ascendente)
-            dataToExport.sort((a, b) => new Date(a.dataSolicitacao) - new Date(b.dataSolicitacao));
+            // Ordena os dados por número de registro (ascendente)
+            dataToExport.sort((a, b) => parseInt(a.numeroRegistro, 10) - parseInt(b.numeroRegistro, 10));
 
             const formatDateForExcel = (dateStr) => dateStr ? new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR') : '';
             let totalValor = 0;
@@ -497,7 +563,7 @@
                 };
 
                 if (tipo === 'Urna') {
-                    baseRecord['Idade'] = row.idadeFalecido ? `${row.idadeFalecido} ANOS` : '';
+                    baseRecord['Idade'] = row.idadeFalecido ? `${row.idadeFalecido} ${row.idadeUnidade || 'ANOS'}` : '';
                 }
 
                 baseRecord['Data do Óbito'] = formatDateForExcel(row.dataObito);
@@ -556,8 +622,8 @@
                 return;
             }
             
-            // Ordena os dados por data de solicitação (ascendente)
-            dataToPrint.sort((a, b) => new Date(a.dataSolicitacao) - new Date(b.dataSolicitacao));
+            // Ordena os dados por número de registro (ascendente)
+            dataToPrint.sort((a, b) => parseInt(a.numeroRegistro, 10) - parseInt(b.numeroRegistro, 10));
 
             const monthNames = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
             const monthName = monthNames[month - 1];
@@ -591,7 +657,7 @@
                         <td>${row.documentoFalecido || ''}</td>
                 `;
                 if (tipo === 'Urna') {
-                    rowHTML += `<td>${row.idadeFalecido ? row.idadeFalecido + ' ANOS' : ''}</td>`;
+                    rowHTML += `<td>${row.idadeFalecido ? row.idadeFalecido + ' ' + (row.idadeUnidade || 'ANOS') : ''}</td>`;
                 }
                 rowHTML += `
                     <td>${row.dataObito ? new Date(row.dataObito + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
@@ -618,15 +684,10 @@
                             }
                             body { 
                                 font-family: Arial, sans-serif; 
-                                padding-top: 4cm; /* Espaço para o cabeçalho fixo */
                                 padding-bottom: 1cm; /* Espaço para o rodapé fixo */
                                 counter-reset: page; /* Inicia o contador de página */
                             }
                             .report-header { 
-                                position: fixed; 
-                                top: 0;
-                                left: 0;
-                                right: 0;
                                 height: 4cm; 
                                 text-align: center;
                             }
@@ -714,3 +775,4 @@
     </script>
 </body>
 </html>
+
