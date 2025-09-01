@@ -628,10 +628,22 @@
             const monthNames = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
             const monthName = monthNames[month - 1];
             let totalValor = 0;
+            dataToPrint.forEach(row => totalValor += parseFloat(row.valor) || 0); // Calcula o total geral
 
             const printWindow = window.open('', '', 'height=600,width=800');
             
-            let tableHTML = '';
+            // Função para dividir o array em pedaços (páginas)
+            const chunkArray = (array, size) => {
+                const chunks = [];
+                for (let i = 0; i < array.length; i += size) {
+                    chunks.push(array.slice(i, i + size));
+                }
+                return chunks;
+            };
+
+            const chunks = chunkArray(dataToPrint, 25); // divide em páginas de 25
+            let tablesHTML = '';
+
             let headers = ['Nº', 'Nº Reg.', 'Data da Solicitação', 'Requerente', 'CPF do Requerente', 'Telefone', 'Falecido(a)', 'Documento do Falecido'];
             if (tipo === 'Urna') {
                  headers.push('Idade');
@@ -642,36 +654,56 @@
             }
             headers.push('Valor');
 
+            chunks.forEach((chunk, pageIndex) => {
+                let rowsHTML = '';
+                chunk.forEach((row, index) => {
+                    let rowHTML = `
+                        <tr>
+                            <td>${pageIndex * 25 + index + 1}</td>
+                            <td>${row.numeroRegistro || ''}</td>
+                            <td>${row.dataSolicitacao ? new Date(row.dataSolicitacao + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
+                            <td>${row.requerente || ''}</td>
+                            <td>${row.cpfRequerente || ''}</td>
+                            <td>${row.telefoneRequerente || ''}</td>
+                            <td>${row.falecido || ''}</td>
+                            <td>${row.documentoFalecido || ''}</td>
+                    `;
+                    if (tipo === 'Urna') {
+                        rowHTML += `<td>${row.idadeFalecido ? row.idadeFalecido + ' ' + (row.idadeUnidade || 'ANOS') : ''}</td>`;
+                    }
+                    rowHTML += `
+                        <td>${row.dataObito ? new Date(row.dataObito + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
+                        <td>${row.bairroFalecido || ''}</td>
+                    `;
+                    if (tipo === 'Translado') {
+                        rowHTML += `<td>${row.onibus || '0'}</td>`;
+                    }
+                    rowHTML += `
+                            <td>${(row.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                        </tr>
+                    `;
+                    rowsHTML += rowHTML;
+                });
 
-            dataToPrint.forEach((row, index) => {
-                totalValor += parseFloat(row.valor) || 0;
-                let rowHTML = `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${row.numeroRegistro || ''}</td>
-                        <td>${row.dataSolicitacao ? new Date(row.dataSolicitacao + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
-                        <td>${row.requerente || ''}</td>
-                        <td>${row.cpfRequerente || ''}</td>
-                        <td>${row.telefoneRequerente || ''}</td>
-                        <td>${row.falecido || ''}</td>
-                        <td>${row.documentoFalecido || ''}</td>
+                tablesHTML += `
+                    <table>
+                        <thead>
+                            <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+                        </thead>
+                        <tbody>${rowsHTML}</tbody>
+                        ${pageIndex === chunks.length - 1 ? `
+                            <tfoot>
+                                <tr>
+                                    <td colspan="${headers.length - 1}" style="text-align: right;">Total de Solicitações: ${dataToPrint.length}</td>
+                                    <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                </tr>
+                            </tfoot>
+                        ` : ''}
+                    </table>
+                    ${pageIndex < chunks.length - 1 ? '<div style="page-break-after: always;"></div>' : ''}
                 `;
-                if (tipo === 'Urna') {
-                    rowHTML += `<td>${row.idadeFalecido ? row.idadeFalecido + ' ' + (row.idadeUnidade || 'ANOS') : ''}</td>`;
-                }
-                rowHTML += `
-                    <td>${row.dataObito ? new Date(row.dataObito + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
-                    <td>${row.bairroFalecido || ''}</td>
-                `;
-                if (tipo === 'Translado') {
-                    rowHTML += `<td>${row.onibus || '0'}</td>`;
-                }
-                rowHTML += `
-                        <td>${(row.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                    </tr>
-                `;
-                tableHTML += rowHTML;
             });
+
 
             const fullHtml = `
                 <html>
@@ -714,23 +746,7 @@
                             <img src="logo.png" alt="Logo">
                             <div class="report-title">Relatório de Solicitações de ${tipo.toUpperCase()} - ${monthName}/${year}</div>
                         </div>
-
-                        <table>
-                            <thead>
-                                <tr>
-                                    ${headers.map(h => `<th>${h}</th>`).join('')}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${tableHTML}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="${headers.length - 1}" style="text-align: right;">Total de Solicitações: ${dataToPrint.length}</td>
-                                    <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                        ${tablesHTML}
                     </body>
                 </html>`;
 
@@ -757,5 +773,6 @@
     </script>
 </body>
 </html>
+
 
 
