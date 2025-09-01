@@ -717,7 +717,7 @@
                             <tfoot>
                                 <tr>
                                     <td colspan="${headers.length - 1}" style="text-align: right;">Total de Solicitações: ${dataToPrint.length}</td>
-                                    <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', 'BRL' })}</td>
+                                    <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                 </tr>
                             </tfoot>
                         ` : ''}
