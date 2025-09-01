@@ -14,13 +14,6 @@
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
         .hidden { display: none; }
-        /* Estilos para impressão */
-        @media print {
-            @page { size: landscape; }
-            body * { visibility: hidden; }
-            #print-section, #print-section * { visibility: visible; }
-            #print-section { position: absolute; left: 0; top: 0; width: 100%; }
-        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -71,6 +64,7 @@
                 <div><label for="cpf-requerente" class="block text-sm font-medium">CPF (Requerente)</label><input type="text" id="cpf-requerente" placeholder="000.000.000-00" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 <div><label for="telefone-requerente" class="block text-sm font-medium">Telefone</label><input type="tel" id="telefone-requerente" placeholder="(00) 00000-0000" class="mt-1 block w-full p-2 border rounded-md"></div>
                 <div><label for="falecido" class="block text-sm font-medium">Falecido(a)</label><input type="text" id="falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                
                 <div>
                     <label for="bairro-falecido" class="block text-sm font-medium">Bairro</label>
                     <select id="bairro-falecido" class="mt-1 block w-full p-2 border rounded-md" required>
@@ -96,23 +90,27 @@
                         <option value="Vilas do Atlântico">Vilas do Atlântico</option>
                     </select>
                 </div>
-                <div id="idade-container">
-                    <label for="idade-falecido" class="block text-sm font-medium">Idade (Falecido)</label>
-                    <div class="flex items-center mt-1 space-x-2">
-                        <input type="number" id="idade-falecido" min="0" class="block w-full p-2 border rounded-md" required>
-                        <select id="idade-unidade" class="block w-full p-2 border rounded-md">
+
+                <div id="idade-container" class="col-span-1 hidden">
+                    <label class="block text-sm font-medium">Idade (Falecido)</label>
+                    <div class="flex items-center mt-1">
+                        <input type="number" id="idade-falecido" min="0" class="block w-full p-2 border rounded-l-md" placeholder="Qtd">
+                        <select id="idade-unidade" class="block p-2 border-t border-b border-r rounded-r-md bg-gray-50">
                             <option value="ANOS" selected>Anos</option>
                             <option value="MESES">Meses</option>
                             <option value="DIAS">Dias</option>
                         </select>
                     </div>
                 </div>
+                
                 <div class="md:col-span-2 grid grid-cols-2 gap-2">
                     <div><label for="tipo-documento-falecido" class="block text-sm font-medium">Documento</label><select id="tipo-documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required><option value="" disabled selected>Selecione...</option><option value="CPF">CPF</option><option value="RG">RG</option><option value="Certidao">Certidão Nasc.</option></select></div>
                     <div><label for="documento-falecido" class="block text-sm font-medium">Número</label><input type="text" id="documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 </div>
                 <div><label for="data-obito" class="block text-sm font-medium">Data do Óbito</label><input type="date" id="data-obito" class="mt-1 block w-full p-2 border rounded-md" required></div>
-                <div id="onibus-container" class="col-span-1"><label for="onibus" class="block text-sm font-medium">Qtd. de Ônibus</label><input type="number" id="onibus" min="0" placeholder="Qtd" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                
+                <div id="onibus-container" class="col-span-1 hidden"><label for="onibus" class="block text-sm font-medium">Qtd. de Ônibus</label><input type="number" id="onibus" min="0" placeholder="Qtd" class="mt-1 block w-full p-2 border rounded-md"></div>
+                
                 <div><label for="valor" class="block text-sm font-medium">Valor</label><input type="text" id="valor" placeholder="R$ 0,00" class="mt-1 block w-full p-2 border rounded-md" required></div>
                 <div class="md:col-span-4 flex justify-end"><button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md">Adicionar</button></div>
             </form>
@@ -155,7 +153,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const collectionName = "registros"; 
+        const collectionName = "registros";
 
         // --- DOM ELEMENTS ---
         const form = document.getElementById('data-form');
@@ -169,10 +167,14 @@
         const documentoFalecidoInput = document.getElementById('documento-falecido');
         const printUrnaBtn = document.getElementById('print-urna');
         const printTransladoBtn = document.getElementById('print-translado');
+        
+        // Novos elementos para campos dinâmicos
+        const idadeContainer = document.getElementById('idade-container');
+        const idadeFalecidoInput = document.getElementById('idade-falecido');
+        const idadeUnidadeSelect = document.getElementById('idade-unidade');
         const onibusContainer = document.getElementById('onibus-container');
         const onibusInput = document.getElementById('onibus');
-        const idadeContainer = document.getElementById('idade-container');
-        const idadeInput = document.getElementById('idade-falecido');
+
         const editModal = document.getElementById('edit-modal');
         const editFormContainer = document.getElementById('edit-form');
         const cancelEditBtn = document.getElementById('cancel-edit-button');
@@ -182,47 +184,49 @@
         let dataStore = [];
         let currentEditingId = null;
 
-        // --- AUTHENTICATION & SESSION TIMEOUT ---
+        // --- SESSION TIMEOUT LOGIC ---
+        const maxSessionDuration = 8 * 60 * 60 * 1000; // 8 horas in milissegundos
+        const loginTimeKey = 'loginTime';
+
+        const checkSession = () => {
+            const loginTime = localStorage.getItem(loginTimeKey);
+            if (loginTime) {
+                const elapsedTime = Date.now() - parseInt(loginTime, 10);
+                if (elapsedTime > maxSessionDuration) {
+                    signOut(auth).then(() => {
+                        localStorage.removeItem(loginTimeKey);
+                        // A verificação onAuthStateChanged irá redirecionar para o login
+                    });
+                }
+            }
+        };
+
+
+        // --- AUTHENTICATION ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Define a duração máxima da sessão (8 horas em milissegundos)
-                const maxSessionDuration = 8 * 60 * 60 * 1000; 
-                const loginTimestamp = localStorage.getItem('loginTimestamp');
-
-                if (loginTimestamp) {
-                    const loginTime = parseInt(loginTimestamp);
-                    const currentTime = Date.now();
-
-                    if ((currentTime - loginTime) > maxSessionDuration) {
-                        // A sessão expirou, faz o logout
-                        console.log("Sessão expirada. Desconectando...");
-                        signOut(auth); 
-                        return; 
-                    }
-                } else {
-                    // Se não há um timestamp, é um novo login. Armazena a hora atual.
-                    localStorage.setItem('loginTimestamp', Date.now());
+                if (!localStorage.getItem(loginTimeKey)) {
+                    localStorage.setItem(loginTimeKey, Date.now().toString());
                 }
-
-                // Se a sessão for válida, exibe o conteúdo da página e carrega os dados
+                checkSession(); // Verifica a sessão ao carregar a página
                 document.body.style.visibility = 'visible';
                 carregarDados();
-
             } else {
-                // Se não há utilizador, limpa o timestamp e redireciona para o login
-                localStorage.removeItem('loginTimestamp');
+                localStorage.removeItem(loginTimeKey);
                 window.location.href = '/login.html';
             }
         });
 
         document.getElementById('logout-button').addEventListener('click', () => {
-            // Limpa o timestamp ao clicar em "Sair" e faz o logout
-            localStorage.removeItem('loginTimestamp');
-            signOut(auth);
+            signOut(auth).then(() => {
+                localStorage.removeItem(loginTimeKey);
+                // onAuthStateChanged irá tratar do redirecionamento
+            });
         });
 
         // --- FIRESTORE LOGIC ---
         const carregarDados = async () => {
+            // A ordenação primária por data de solicitação é mantida para a exibição na tabela principal
             const q = query(collection(db, collectionName), orderBy("dataSolicitacao", "desc"));
             const querySnapshot = await getDocs(q);
             dataStore = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -276,6 +280,13 @@
                     const row = document.createElement('tr');
                     const formatDate = (dateStr) => dateStr ? new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR') : '';
                     totalValor += parseFloat(rowData.valor) || 0;
+                    
+                    // Formata a idade para exibição
+                    let idadeDisplay = '';
+                    if (rowData.idadeFalecido) {
+                        idadeDisplay = `${rowData.idadeFalecido} ${rowData.idadeUnidade || 'ANOS'}`;
+                    }
+
                     row.innerHTML = `
                         <td class="px-6 py-4 font-bold">${index + 1}</td>
                         <td class="px-6 py-4">${rowData.numeroRegistro || ''}</td>
@@ -284,7 +295,7 @@
                         <td class="px-6 py-4">${formatDate(rowData.dataSolicitacao)}</td>
                         <td class="px-6 py-4">${rowData.requerente}</td>
                         <td class="px-6 py-4">${rowData.falecido}</td>
-                        <td class="px-6 py-4">${rowData.idadeFalecido ? rowData.idadeFalecido + ' ' + (rowData.idadeUnidade || 'ANOS') : ''}</td>
+                        <td class="px-6 py-4">${idadeDisplay}</td>
                         <td class="px-6 py-4">
                             <button data-id="${rowData.id}" class="text-blue-600 hover:text-blue-900 edit-btn mr-2">Editar</button>
                             <button data-id="${rowData.id}" class="text-red-600 hover:text-red-900 delete-btn">Excluir</button>
@@ -312,6 +323,7 @@
             e.preventDefault();
             const valorNumerico = parseFloat(valorInput.value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
             const tipoSelecionado = form.tipo.value;
+            
             const novoRegistro = {
                 tipo: tipoSelecionado,
                 origemSolicitacao: form['origem-solicitacao'].value,
@@ -322,17 +334,17 @@
                 telefoneRequerente: form['telefone-requerente'].value,
                 falecido: form.falecido.value,
                 bairroFalecido: form['bairro-falecido'].value,
-                idadeFalecido: tipoSelecionado === 'Urna' ? form['idade-falecido'].value : '',
-                idadeUnidade: tipoSelecionado === 'Urna' ? form['idade-unidade'].value : '',
+                idadeFalecido: tipoSelecionado === 'Urna' ? idadeFalecidoInput.value : '',
+                idadeUnidade: tipoSelecionado === 'Urna' ? idadeUnidadeSelect.value : '',
                 tipoDocumentoFalecido: form['tipo-documento-falecido'].value,
                 documentoFalecido: form['documento-falecido'].value,
                 dataObito: form['data-obito'].value,
-                onibus: tipoSelecionado === 'Translado' ? form.onibus.value : '0',
+                onibus: tipoSelecionado === 'Translado' ? onibusInput.value : '0',
                 valor: isNaN(valorNumerico) ? 0 : valorNumerico
             };
             adicionarRegistro(novoRegistro);
             form.reset();
-            handleTipoChange();
+            handleTipoChange(); // Reseta a visibilidade dos campos
         });
 
         tableBody.addEventListener('click', (e) => {
@@ -359,12 +371,13 @@
                 submitButtonContainer.remove();
             }
 
+            // Seletores para o formulário de edição
             const editOrigemSelect = editForm.querySelector('#origem-solicitacao');
-            const editOnibusContainer = editForm.querySelector('#onibus-container');
-            const editOnibusInput = editForm.querySelector('#onibus');
             const editIdadeContainer = editForm.querySelector('#idade-container');
             const editIdadeInput = editForm.querySelector('#idade-falecido');
-            const editIdadeUnidadeSelect = editForm.querySelector('#idade-unidade');
+            const editIdadeUnidade = editForm.querySelector('#idade-unidade');
+            const editOnibusContainer = editForm.querySelector('#onibus-container');
+            const editOnibusInput = editForm.querySelector('#onibus');
             const editValorInput = editForm.querySelector('#valor');
 
             const handleEditTipoChange = () => {
@@ -372,26 +385,22 @@
                  if (tipoSelecionado === 'Urna') {
                     editOrigemSelect.innerHTML = '<option>UPA ITINGA</option><option>SEMDESC</option>';
                     editOrigemSelect.disabled = false;
-                    editOnibusContainer.classList.add('hidden');
-                    editOnibusInput.required = false;
                     editIdadeContainer.classList.remove('hidden');
-                    editIdadeInput.required = true;
+                    editOnibusContainer.classList.add('hidden');
                 } else if (tipoSelecionado === 'Translado') {
                     editOrigemSelect.innerHTML = '<option selected>SEMDESC</option>';
                     editOrigemSelect.disabled = true;
-                    editOnibusContainer.classList.remove('hidden');
-                    editOnibusInput.required = true;
                     editIdadeContainer.classList.add('hidden');
-                    editIdadeInput.required = false;
+                    editOnibusContainer.classList.remove('hidden');
                 }
             };
             
             editForm.querySelectorAll('input[name="tipo"]').forEach(radio => radio.addEventListener('change', handleEditTipoChange));
 
             editForm.querySelector(`input[name="tipo"][value="${record.tipo}"]`).checked = true;
-            handleEditTipoChange();
-            editOrigemSelect.value = record.origemSolicitacao;
+            handleEditTipoChange(); // Aplica a lógica de visibilidade inicial
             
+            editOrigemSelect.value = record.origemSolicitacao;
             editForm.querySelector('#numero-registro').value = record.numeroRegistro || '';
             editForm.querySelector('#data-solicitacao').value = record.dataSolicitacao || '';
             editForm.querySelector('#requerente').value = record.requerente || '';
@@ -399,10 +408,10 @@
             editForm.querySelector('#telefone-requerente').value = record.telefoneRequerente || '';
             editForm.querySelector('#falecido').value = record.falecido || '';
             editForm.querySelector('#bairro-falecido').value = record.bairroFalecido || '';
+            
             editIdadeInput.value = record.idadeFalecido || '';
-            if (editIdadeUnidadeSelect) {
-                editIdadeUnidadeSelect.value = record.idadeUnidade || 'ANOS';
-            }
+            editIdadeUnidade.value = record.idadeUnidade || 'ANOS';
+
             editForm.querySelector('#tipo-documento-falecido').value = record.tipoDocumentoFalecido || '';
             editForm.querySelector('#documento-falecido').value = record.documentoFalecido || '';
             editForm.querySelector('#data-obito').value = record.dataObito || '';
@@ -489,27 +498,22 @@
             if (tipoSelecionado === 'Urna') {
                 origemSelect.innerHTML = '<option>UPA ITINGA</option><option>SEMDESC</option>';
                 origemSelect.disabled = false;
-                onibusContainer.classList.add('hidden');
-                onibusInput.required = false;
                 idadeContainer.classList.remove('hidden');
-                idadeInput.required = true;
+                onibusContainer.classList.add('hidden');
             } else if (tipoSelecionado === 'Translado') {
                 origemSelect.innerHTML = '<option selected>SEMDESC</option>';
                 origemSelect.disabled = true;
-                onibusContainer.classList.remove('hidden');
-                onibusInput.required = true;
                 idadeContainer.classList.add('hidden');
-                idadeInput.required = false;
-            } else {
+                onibusContainer.classList.remove('hidden');
+            } else { // Nenhum selecionado
                  origemSelect.innerHTML = '';
-                 onibusContainer.classList.add('hidden');
-                 onibusInput.required = false;
                  idadeContainer.classList.add('hidden');
-                 idadeInput.required = false;
+                 onibusContainer.classList.add('hidden');
             }
         };
         tipoRadios.forEach(radio => radio.addEventListener('change', handleTipoChange));
         
+        // --- REPORTING LOGIC ---
         const getFilteredData = () => {
             const monthFilter = document.getElementById('month-filter');
             const yearFilter = document.getElementById('year-filter');
@@ -544,70 +548,88 @@
             
             // Ordena os dados por número de registro (ascendente)
             dataToExport.sort((a, b) => parseInt(a.numeroRegistro, 10) - parseInt(b.numeroRegistro, 10));
-
+            
             const formatDateForExcel = (dateStr) => dateStr ? new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR') : '';
             let totalValor = 0;
 
             const mappedData = dataToExport.map((row, index) => {
                 totalValor += parseFloat(row.valor) || 0;
-                
-                const baseRecord = {
+                let baseData = {
                     'Nº': index + 1,
-                    'Nº Reg.': row.numeroRegistro,
+                    'Nº Registro': row.numeroRegistro,
                     'Data da Solicitação': formatDateForExcel(row.dataSolicitacao),
                     'Requerente': row.requerente,
                     'CPF do Requerente': row.cpfRequerente,
-                    'Telefone': row.telefoneRequerente,
+                    'Telefone do Requerente': row.telefoneRequerente,
                     'Falecido(a)': row.falecido,
                     'Documento do Falecido': row.documentoFalecido,
+                    'Data do Óbito': formatDateForExcel(row.dataObito),
+                    'Bairro': row.bairroFalecido,
+                    'Valor': row.valor
                 };
 
                 if (tipo === 'Urna') {
-                    baseRecord['Idade'] = row.idadeFalecido ? `${row.idadeFalecido} ${row.idadeUnidade || 'ANOS'}` : '';
-                }
-
-                baseRecord['Data do Óbito'] = formatDateForExcel(row.dataObito);
-                baseRecord['Bairro'] = row.bairroFalecido;
-
-                if (tipo === 'Translado') {
-                    baseRecord['Ônibus'] = row.onibus;
+                    baseData['Idade do Falecido'] = row.idadeFalecido ? `${row.idadeFalecido} ${row.idadeUnidade || 'ANOS'}` : '';
+                } else { // Translado
+                    baseData['Qtd. de Ônibus'] = row.onibus;
                 }
                 
-                baseRecord['Valor'] = row.valor;
-
-                return baseRecord;
+                return baseData;
             });
 
-            // Adiciona a linha de total
-            const summaryRow = {};
-            const columns = Object.keys(mappedData[0] || {});
-            summaryRow[columns[columns.length - 3]] = 'Total de Solicitações:';
-            summaryRow[columns[columns.length - 2]] = dataToExport.length;
-            summaryRow[columns[columns.length - 1]] = totalValor;
-            mappedData.push(summaryRow);
+            mappedData.push({ 'Nº': '', 'Nº Registro': '', 'Data da Solicitação': 'Total de Solicitações:', 'Requerente': dataToExport.length, 'Valor': totalValor });
 
             const worksheet = XLSX.utils.json_to_sheet(mappedData);
             
-            // Ajusta a largura das colunas
-            worksheet['!cols'] = [ {wch:5}, {wch:10}, {wch:20}, {wch:25}, {wch:20}, {wch:20}, {wch:25}, {wch:25}, {wch:15}, {wch:20}, {wch:20}, {wch:15}, {wch:15} ];
+            // Define larguras das colunas
+            worksheet['!cols'] = [ {wch:5}, {wch:10}, {wch:20}, {wch:30}, {wch:20}, {wch:20}, {wch:30}, {wch:20}, {wch:20}, {wch:20}, {wch:15}, {wch:15} ];
             
             // Formata a coluna de valor como moeda
             dataToExport.forEach((row, index) => {
-                const cellRef = XLSX.utils.encode_cell({c: columns.length - 1, r: index + 1});
+                const cellRef = XLSX.utils.encode_cell({c: (tipo === 'Urna' ? 11 : 10) , r: index + 1});
                 if(worksheet[cellRef]) {
                     worksheet[cellRef].t = 'n';
                     worksheet[cellRef].z = 'R$ #,##0.00';
                 }
             });
-            const totalCellRef = XLSX.utils.encode_cell({c: columns.length - 1, r: dataToExport.length + 1});
+            const totalCellRef = XLSX.utils.encode_cell({c: 4, r: dataToExport.length + 1});
             if(worksheet[totalCellRef]) {
-                worksheet[totalCellRef].t = 'n';
-                worksheet[totalCellRef].z = 'R$ #,##0.00';
+                 worksheet[totalCellRef].t = 'n';
+                 worksheet[totalCellRef].z = 'R$ #,##0.00';
             }
 
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, tipo);
             XLSX.writeFile(workbook, `Relatorio_${tipo}_${month}-${year}.xlsx`);
+        };
+
+        const generateColumnWidths = (tipo) => {
+            // CSS com larguras fixas em pixels para garantir alinhamento perfeito.
+            let base_css = `
+                th:nth-child(1), td:nth-child(1) { width: 40px; }   /* Nº */
+                th:nth-child(2), td:nth-child(2) { width: 70px; }   /* Nº Reg. */
+                th:nth-child(3), td:nth-child(3) { width: 100px; }  /* Data Solicitação */
+                th:nth-child(4), td:nth-child(4) { width: 180px; }  /* Requerente */
+                th:nth-child(5), td:nth-child(5) { width: 120px; }  /* CPF */
+                th:nth-child(6), td:nth-child(6) { width: 120px; }  /* Telefone */
+                th:nth-child(7), td:nth-child(7) { width: 180px; }  /* Falecido(a) */
+                th:nth-child(8), td:nth-child(8) { width: 120px; }  /* Documento */
+            `;
+            if (tipo === 'Urna') {
+                return base_css + `
+                    th:nth-child(9), td:nth-child(9) { width: 70px; }   /* Idade */
+                    th:nth-child(10), td:nth-child(10) { width: 100px; } /* Data Óbito */
+                    th:nth-child(11), td:nth-child(11) { width: 100px; } /* Bairro */
+                    th:nth-child(12), td:nth-child(12) { width: 90px; }  /* Valor */
+                `;
+            } else { // Translado
+                return base_css + `
+                    th:nth-child(9), td:nth-child(9) { width: 100px; }  /* Data Óbito */
+                    th:nth-child(10), td:nth-child(10) { width: 100px; } /* Bairro */
+                    th:nth-child(11), td:nth-child(11) { width: 70px; }  /* Ônibus */
+                    th:nth-child(12), td:nth-child(12) { width: 90px; }  /* Valor */
+                `;
+            }
         };
 
         const printReport = (tipo) => {
@@ -733,12 +755,23 @@
                             table { 
                                 width: 100%; 
                                 border-collapse: collapse; 
+                                table-layout: fixed; /* Força larguras de coluna fixas */
                             }
                             thead { display: table-header-group; } /* Garante que o cabeçalho da tabela se repita */
                             tfoot { display: table-row-group; } /* Garante que o rodapé apareça logo após o corpo da tabela */
-                            th, td { border: 1px solid #ddd; padding: 4px; text-align: center; font-size: 8px; white-space: nowrap; }
+                            th, td { 
+                                border: 1px solid #ddd; 
+                                padding: 4px; 
+                                text-align: center; 
+                                font-size: 8px; 
+                                white-space: normal;  /* Permite quebra de linha automática */
+                                word-wrap: break-word; /* Força a quebra de palavras longas */
+                            }
                             th { background-color: #f2f2f2; }
                             tfoot { font-weight: bold; }
+                            
+                            /* Definição de largura para cada coluna */
+                            ${generateColumnWidths(tipo)}
                         </style>
                     </head>
                     <body>
@@ -769,10 +802,7 @@
             document.getElementById('year-filter').value = today.getFullYear();
         };
         setInitialDateFilters();
-        handleTipoChange();
+        handleTipoChange(); // Inicializa a visibilidade dos campos com base no tipo
     </script>
 </body>
 </html>
-
-
-
