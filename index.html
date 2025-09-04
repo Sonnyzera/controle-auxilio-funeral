@@ -663,7 +663,7 @@
                 return chunks;
             };
 
-            const itemsPerPage = 20; 
+            const itemsPerPage = 20;
             const chunks = chunkArray(dataToPrint, itemsPerPage);
             let tablesHTML = '';
 
@@ -680,33 +680,33 @@
             chunks.forEach((chunk, pageIndex) => {
                 let rowsHTML = '';
                 chunk.forEach((row, index) => {
-                    let rowHTML = `
-                        <tr>
-                            <td>${pageIndex * itemsPerPage + index + 1}</td>
-                            <td>${row.numeroRegistro || ''}</td>
-                            <td>${row.origemSolicitacao || ''}</td>
-                            <td>${row.dataSolicitacao ? new Date(row.dataSolicitacao + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
-                            <td>${row.requerente || ''}</td>
-                            <td>${row.cpfRequerente || ''}</td>
-                            <td>${row.telefoneRequerente || ''}</td>
-                            <td>${row.falecido || ''}</td>
-                            <td>${row.documentoFalecido || ''}</td>
-                    `;
+                    
+                    const cells = [
+                        `<td>${pageIndex * itemsPerPage + index + 1}</td>`,
+                        `<td>${row.numeroRegistro || ''}</td>`,
+                        `<td>${row.origemSolicitacao || ''}</td>`,
+                        `<td>${row.dataSolicitacao ? new Date(row.dataSolicitacao + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>`,
+                        `<td>${row.requerente || ''}</td>`,
+                        `<td>${row.cpfRequerente || ''}</td>`,
+                        `<td>${row.telefoneRequerente || ''}</td>`,
+                        `<td>${row.falecido || ''}</td>`,
+                        `<td>${row.documentoFalecido || ''}</td>`
+                    ];
+
                     if (tipo === 'Urna') {
-                        rowHTML += `<td>${row.idadeFalecido ? row.idadeFalecido + ' ' + (row.idadeUnidade || 'ANOS') : ''}</td>`;
+                        cells.push(`<td>${row.idadeFalecido ? row.idadeFalecido + ' ' + (row.idadeUnidade || 'ANOS') : ''}</td>`);
                     }
-                    rowHTML += `
-                        <td>${row.dataObito ? new Date(row.dataObito + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
-                        <td>${row.bairroFalecido || ''}</td>
-                    `;
+                    
+                    cells.push(`<td>${row.dataObito ? new Date(row.dataObito + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>`);
+                    cells.push(`<td>${row.bairroFalecido || ''}</td>`);
+
                     if (tipo === 'Translado') {
-                        rowHTML += `<td>${row.onibus || '0'}</td>`;
+                        cells.push(`<td>${row.onibus || '0'}</td>`);
                     }
-                    rowHTML += `
-                            <td>${(row.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                        </tr>
-                    `;
-                    rowsHTML += rowHTML;
+
+                    cells.push(`<td>${(row.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>`);
+
+                    rowsHTML += `<tr>${cells.join('')}</tr>`;
                 });
 
                 tablesHTML += `
@@ -742,8 +742,8 @@
                                 font-family: Arial, sans-serif; 
                             }
                             .report-header { 
-                                height: 4cm; 
                                 text-align: center;
+                                margin-bottom: 20px;
                             }
                             .report-header img { 
                                 height: 2.86cm; 
