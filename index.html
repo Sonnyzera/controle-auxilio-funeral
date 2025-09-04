@@ -606,28 +606,29 @@
         const generateColumnWidths = (tipo) => {
             // CSS com larguras fixas em pixels para garantir alinhamento perfeito.
             let base_css = `
-                th:nth-child(1), td:nth-child(1) { width: 40px; }   /* Nº */
-                th:nth-child(2), td:nth-child(2) { width: 70px; }   /* Nº Reg. */
-                th:nth-child(3), td:nth-child(3) { width: 100px; }  /* Data Solicitação */
-                th:nth-child(4), td:nth-child(4) { width: 180px; }  /* Requerente */
-                th:nth-child(5), td:nth-child(5) { width: 120px; }  /* CPF */
-                th:nth-child(6), td:nth-child(6) { width: 120px; }  /* Telefone */
-                th:nth-child(7), td:nth-child(7) { width: 180px; }  /* Falecido(a) */
-                th:nth-child(8), td:nth-child(8) { width: 120px; }  /* Documento */
+                th:nth-child(1), td:nth-child(1) { width: 35px; }   /* Nº */
+                th:nth-child(2), td:nth-child(2) { width: 60px; }   /* Nº Reg. */
+                th:nth-child(3), td:nth-child(3) { width: 90px; }   /* Origem */
+                th:nth-child(4), td:nth-child(4) { width: 90px; }   /* Data Solicitação */
+                th:nth-child(5), td:nth-child(5) { width: 150px; }  /* Requerente */
+                th:nth-child(6), td:nth-child(6) { width: 110px; }  /* CPF */
+                th:nth-child(7), td:nth-child(7) { width: 110px; }  /* Telefone */
+                th:nth-child(8), td:nth-child(8) { width: 150px; }  /* Falecido(a) */
+                th:nth-child(9), td:nth-child(9) { width: 110px; }  /* Documento */
             `;
             if (tipo === 'Urna') {
                 return base_css + `
-                    th:nth-child(9), td:nth-child(9) { width: 70px; }   /* Idade */
-                    th:nth-child(10), td:nth-child(10) { width: 100px; } /* Data Óbito */
-                    th:nth-child(11), td:nth-child(11) { width: 100px; } /* Bairro */
-                    th:nth-child(12), td:nth-child(12) { width: 90px; }  /* Valor */
+                    th:nth-child(10), td:nth-child(10) { width: 60px; }   /* Idade */
+                    th:nth-child(11), td:nth-child(11) { width: 90px; } /* Data Óbito */
+                    th:nth-child(12), td:nth-child(12) { width: 90px; } /* Bairro */
+                    th:nth-child(13), td:nth-child(13) { width: 80px; }  /* Valor */
                 `;
             } else { // Translado
                 return base_css + `
-                    th:nth-child(9), td:nth-child(9) { width: 100px; }  /* Data Óbito */
-                    th:nth-child(10), td:nth-child(10) { width: 100px; } /* Bairro */
-                    th:nth-child(11), td:nth-child(11) { width: 70px; }  /* Ônibus */
-                    th:nth-child(12), td:nth-child(12) { width: 90px; }  /* Valor */
+                    th:nth-child(10), td:nth-child(10) { width: 90px; }  /* Data Óbito */
+                    th:nth-child(11), td:nth-child(11) { width: 90px; } /* Bairro */
+                    th:nth-child(12), td:nth-child(12) { width: 60px; }  /* Ônibus */
+                    th:nth-child(13), td:nth-child(13) { width: 80px; }  /* Valor */
                 `;
             }
         };
@@ -654,7 +655,6 @@
 
             const printWindow = window.open('', '', 'height=600,width=800');
             
-            // Função para dividir o array em pedaços (páginas)
             const chunkArray = (array, size) => {
                 const chunks = [];
                 for (let i = 0; i < array.length; i += size) {
@@ -663,11 +663,11 @@
                 return chunks;
             };
 
-            const itemsPerPage = 20; // Itens por página
+            const itemsPerPage = 20; 
             const chunks = chunkArray(dataToPrint, itemsPerPage);
             let tablesHTML = '';
 
-            let headers = ['Nº', 'Nº Reg.', 'Data da Solicitação', 'Requerente', 'CPF do Requerente', 'Telefone', 'Falecido(a)', 'Documento do Falecido'];
+            let headers = ['Nº', 'Nº Reg.', 'Origem', 'Data da Solicitação', 'Requerente', 'CPF do Requerente', 'Telefone', 'Falecido(a)', 'Documento do Falecido'];
             if (tipo === 'Urna') {
                  headers.push('Idade');
             }
@@ -684,6 +684,7 @@
                         <tr>
                             <td>${pageIndex * itemsPerPage + index + 1}</td>
                             <td>${row.numeroRegistro || ''}</td>
+                            <td>${row.origemSolicitacao || ''}</td>
                             <td>${row.dataSolicitacao ? new Date(row.dataSolicitacao + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
                             <td>${row.requerente || ''}</td>
                             <td>${row.cpfRequerente || ''}</td>
@@ -756,24 +757,23 @@
                             table { 
                                 width: 100%; 
                                 border-collapse: collapse; 
-                                table-layout: fixed; /* Força larguras de coluna fixas */
+                                table-layout: fixed; 
                             }
-                            thead { display: table-header-group; } /* Garante que o cabeçalho da tabela se repita */
-                            tfoot { display: table-row-group; } /* Garante que o rodapé apareça logo após o corpo da tabela */
+                            thead { display: table-header-group; } 
+                            tfoot { display: table-row-group; } 
                             th, td { 
                                 border: 1px solid #ddd; 
                                 padding: 8px; 
                                 text-align: center; 
                                 font-size: 11px; 
-                                white-space: normal;  /* Permite quebra de linha automática */
-                                word-wrap: break-word; /* Força a quebra de palavras longas */
-                                height: 2.5em; /* Altura de linha padronizada */
-                                vertical-align: middle; /* Alinha o conteúdo verticalmente */
+                                white-space: normal;
+                                word-wrap: break-word; 
+                                height: 2.5em; 
+                                vertical-align: middle; 
                             }
                             th { background-color: #f2f2f2; }
                             tfoot { font-weight: bold; }
                             
-                            /* Definição de largura para cada coluna */
                             ${generateColumnWidths(tipo)}
                         </style>
                     </head>
@@ -805,7 +805,7 @@
             document.getElementById('year-filter').value = today.getFullYear();
         };
         setInitialDateFilters();
-        handleTipoChange(); // Inicializa a visibilidade dos campos com base no tipo
+        handleTipoChange(); 
     </script>
 </body>
 </html>
