@@ -3,40 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Controle de Dados</title>
+    <title>Controle de Dados - Auxílio Funeral</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; visibility: hidden; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .hidden { display: none; }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
+<body class="bg-gray-100 text-gray-800">
 
-    <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Acesso ao Sistema</h2>
-        <form id="login-form">
-            <div class="mb-4">
-                <label for="email" class="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
-                <input type="email" id="email" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" required>
+    <!-- Modal de Edição -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center p-4">
+        <div class="relative mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 text-center mb-4">Editar Registro</h3>
+                <div class="mt-2 px-7 py-3">
+                    <form id="edit-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+                        <!-- Conteúdo do formulário de edição será gerado via JS -->
+                    </form>
+                </div>
+                <div class="items-center px-4 py-3 text-center">
+                    <button id="cancel-edit-button" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        Cancelar
+                    </button>
+                    <button id="save-edit-button" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        Salvar Alterações
+                    </button>
+                </div>
             </div>
-            <div class="mb-6">
-                <label for="password" class="block text-sm font-medium text-gray-600 mb-1">Senha</label>
-                <input type="password" id="password" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" required>
-            </div>
-            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-indigo-700">
-                Entrar
-            </button>
-            <p id="error-message" class="text-red-500 text-sm text-center mt-4"></p>
-        </form>
+        </div>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        // Your web app's Firebase configuration
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="flex justify-between items-center mb-8">
+            <div class="text-left">
+                 <h1 class="text-3xl font-bold text-gray-700">Controle e Exportação de Dados</h1>
+                 <p class="text-md text-gray-500 mt-1">Dados salvos e acessados diretamente da nuvem.</p>
+            </div>
+            <button id="logout-button" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm">
+                Sair
+            </button>
+        </header>
+
+        <!-- Formulário de Adição -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4 border-b pb-2">Adicionar Novo Registro</h2>
+            <form id="data-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="md:col-span-4"><label class="block text-sm font-medium text-gray-600 mb-2">Tipo de Registro <span class="text-red-500">*</span></label><div class="flex items-center space-x-4"><label class="flex items-center"><input type="radio" name="tipo" value="Urna" class="h-4 w-4" required> <span class="ml-2">Urna</span></label><label class="flex items-center"><input type="radio" name="tipo" value="Translado" class="h-4 w-4" required> <span class="ml-2">Translado</span></label></div></div>
+                <div id="origem-container"><label for="origem-solicitacao" class="block text-sm font-medium">Origem</label><select id="origem-solicitacao" class="mt-1 block w-full p-2 border rounded-md" required></select></div>
+                <div><label for="numero-registro" class="block text-sm font-medium">Nº de Registro</label><input type="text" id="numero-registro" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                <div><label for="data-solicitacao" class="block text-sm font-medium">Data Solicitação</label><input type="date" id="data-solicitacao" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                <div><label for="requerente" class="block text-sm font-medium">Requerente</label><input type="text" id="requerente" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                <div><label for="cpf-requerente" class="block text-sm font-medium">CPF (Requerente)</label><input type="text" id="cpf-requerente" placeholder="000.000.000-00" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                <div><label for="telefone-requerente" class="block text-sm font-medium">Telefone</label><input type="tel" id="telefone-requerente" placeholder="(00) 00000-0000" class="mt-1 block w-full p-2 border rounded-md"></div>
+                <div><label for="falecido" class="block text-sm font-medium">Falecido(a)</label><input type="text" id="falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                
+                <div>
+                    <label for="bairro-falecido" class="block text-sm font-medium">Bairro</label>
+                    <select id="bairro-falecido" class="mt-1 block w-full p-2 border rounded-md" required>
+                        <option value="" disabled selected>Selecione o bairro...</option>
+                        <option value="Areia Branca">Areia Branca</option>
+                        <option value="Aracuí">Aracuí</option>
+                        <option value="Barro Duro">Barro Duro</option>
+                        <option value="Buraquinho">Buraquinho</option>
+                        <option value="Caixa d'Água">Caixa d'Água</option>
+                        <option value="Caji">Caji</option>
+                        <option value="Capelão">Capelão</option>
+                        <option value="Centro">Centro</option>
+                        <option value="Ipitanga">Ipitanga</option>
+                        <option value="Itinga">Itinga</option>
+                        <option value="Jambeiro">Jambeiro</option>
+                        <option value="Parque São Paulo">Parque São Paulo</option>
+                        <option value="Pitangueiras">Pitangueiras</option>
+                        <option value="Portão">Portão</option>
+                        <option value="Quingoma">Quingoma</option>
+                        <option value="Recreio Ipitanga">Recreio Ipitanga</option>
+                        <option value="Vida Nova">Vida Nova</option>
+                        <option value="Vila Praiana">Vila Praiana</option>
+                        <option value="Vilas do Atlântico">Vilas do Atlântico</option>
+                    </select>
+                </div>
+
+                <div id="idade-container" class="col-span-1 hidden">
+                    <label class="block text-sm font-medium">Idade (Falecido)</label>
+                    <div class="flex items-center mt-1">
+                        <input type="number" id="idade-falecido" min="0" class="block w-full p-2 border rounded-l-md" placeholder="Qtd">
+                        <select id="idade-unidade" class="block p-2 border-t border-b border-r rounded-r-md bg-gray-50">
+                            <option value="ANOS" selected>Anos</option>
+                            <option value="MESES">Meses</option>
+                            <option value="DIAS">Dias</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="md:col-span-2 grid grid-cols-2 gap-2">
+                    <div><label for="tipo-documento-falecido" class="block text-sm font-medium">Documento</label><select id="tipo-documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required><option value="" disabled selected>Selecione...</option><option value="CPF">CPF</option><option value="RG">RG</option><option value="Certidao">Certidão Nasc.</option></select></div>
+                    <div><label for="documento-falecido" class="block text-sm font-medium">Número</label><input type="text" id="documento-falecido" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                </div>
+                <div><label for="data-obito" class="block text-sm font-medium">Data do Óbito</label><input type="date" id="data-obito" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                
+                <div id="onibus-container" class="col-span-1 hidden"><label for="onibus" class="block text-sm font-medium">Qtd. de Ônibus</label><input type="number" id="onibus" min="0" placeholder="Qtd" class="mt-1 block w-full p-2 border rounded-md"></div>
+                
+                <div><label for="valor" class="block text-sm font-medium">Valor</label><input type="text" id="valor" placeholder="R$ 0,00" class="mt-1 block w-full p-2 border rounded-md" required></div>
+                <div class="md:col-span-4 flex justify-end"><button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md">Adicionar</button></div>
+            </form>
+        </div>
+
+        <!-- Tabela -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+             <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-4 mb-4">
+                <h2 class="text-xl font-semibold">Registros Salvos</h2>
+                <div class="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-2">
+                    <input type="text" id="search-filter" placeholder="Pesquisar em todos os registros..." class="w-full sm:w-auto p-2 border rounded-md">
+                    <div class="w-full sm:w-auto flex items-center gap-2"><select id="month-filter" class="w-full p-2 border rounded-md"><option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select><input type="number" id="year-filter" placeholder="Ano" class="p-2 border rounded-md w-24"></div>
+                    <div class="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
+                        <button id="print-urna" class="w-full bg-gray-500 text-white p-2 rounded-md disabled:bg-gray-400">Imprimir Urnas</button>
+                        <button id="print-translado" class="w-full bg-gray-600 text-white p-2 rounded-md disabled:bg-gray-400">Imprimir Translados</button>
+                        <button id="export-urna" class="w-full bg-blue-600 text-white p-2 rounded-md disabled:bg-gray-400">Exportar Urnas</button>
+                        <button id="export-translado" class="w-full bg-green-600 text-white p-2 rounded-md disabled:bg-gray-400">Exportar Translados</button>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto"><table class="min-w-full divide-y"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium uppercase">Nº</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Nº Reg.</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Tipo</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Origem</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Data Solic.</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Requerente</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Falecido(a)</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Idade</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Ação</th></tr></thead><tbody id="data-table-body" class="bg-white divide-y"></tbody><tfoot id="data-table-footer" class="bg-gray-50 font-bold"></tfoot></table><p id="no-data-message" class="text-center py-8">Carregando dados...</p></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
         const firebaseConfig = {
           apiKey: "AIzaSyBGp5lqn5caaaV1d6ajXX2jqCwIZDi8V20",
           authDomain: "controle-funeral-app.firebaseapp.com",
@@ -46,36 +149,665 @@
           appId: "1:131856655468:web:a43a9d665365c8b4b9e449"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        const loginForm = document.getElementById('login-form');
-        const errorMessage = document.getElementById('error-message');
+        const collectionName = "registros";
 
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            errorMessage.textContent = '';
+        // --- DOM ELEMENTS ---
+        const form = document.getElementById('data-form');
+        const tableBody = document.getElementById('data-table-body');
+        const tableFooter = document.getElementById('data-table-footer');
+        const noDataMessage = document.getElementById('no-data-message');
+        const tipoRadios = document.querySelectorAll('input[name="tipo"]');
+        const origemSelect = document.getElementById('origem-solicitacao');
+        const valorInput = document.getElementById('valor');
+        const tipoDocumentoFalecidoSelect = document.getElementById('tipo-documento-falecido');
+        const documentoFalecidoInput = document.getElementById('documento-falecido');
+        const printUrnaBtn = document.getElementById('print-urna');
+        const printTransladoBtn = document.getElementById('print-translado');
+        
+        // Novos elementos para campos dinâmicos
+        const idadeContainer = document.getElementById('idade-container');
+        const idadeFalecidoInput = document.getElementById('idade-falecido');
+        const idadeUnidadeSelect = document.getElementById('idade-unidade');
+        const onibusContainer = document.getElementById('onibus-container');
+        const onibusInput = document.getElementById('onibus');
 
-            signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    // Login bem-sucedido
-                    window.location.href = '/index.html';
-                })
-                .catch((error) => {
-                    // Se o login falhar, mostra uma mensagem de erro genérica.
-                    // Não tenta mais criar um usuário.
-                    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-                        errorMessage.textContent = 'E-mail ou senha inválidos.';
-                    } else {
-                        errorMessage.textContent = 'Ocorreu um erro. Tente novamente.';
-                    }
-                    console.error("Erro de login:", error);
-                });
+        const editModal = document.getElementById('edit-modal');
+        const editFormContainer = document.getElementById('edit-form');
+        const cancelEditBtn = document.getElementById('cancel-edit-button');
+        const saveEditBtn = document.getElementById('save-edit-button');
+        const searchFilterInput = document.getElementById('search-filter');
+        
+        let dataStore = [];
+        let currentEditingId = null;
+
+        // --- SESSION TIMEOUT LOGIC ---
+        const maxSessionDuration = 8 * 60 * 60 * 1000; // 8 horas in milissegundos
+        const loginTimeKey = 'loginTime';
+
+        const checkSession = () => {
+            const loginTime = localStorage.getItem(loginTimeKey);
+            if (loginTime) {
+                const elapsedTime = Date.now() - parseInt(loginTime, 10);
+                if (elapsedTime > maxSessionDuration) {
+                    signOut(auth).then(() => {
+                        localStorage.removeItem(loginTimeKey);
+                        // A verificação onAuthStateChanged irá redirecionar para o login
+                    });
+                }
+            }
+        };
+
+
+        // --- AUTHENTICATION ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                if (!localStorage.getItem(loginTimeKey)) {
+                    localStorage.setItem(loginTimeKey, Date.now().toString());
+                }
+                checkSession(); // Verifica a sessão ao carregar a página
+                document.body.style.visibility = 'visible';
+                carregarDados();
+            } else {
+                localStorage.removeItem(loginTimeKey);
+                window.location.href = '/login.html';
+            }
         });
+
+        document.getElementById('logout-button').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                localStorage.removeItem(loginTimeKey);
+                // onAuthStateChanged irá tratar do redirecionamento
+            });
+        });
+
+        // --- FIRESTORE LOGIC ---
+        const carregarDados = async () => {
+            // A ordenação primária por data de solicitação é mantida para a exibição na tabela principal
+            const q = query(collection(db, collectionName), orderBy("dataSolicitacao", "desc"));
+            const querySnapshot = await getDocs(q);
+            dataStore = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderTable();
+        };
+
+        const adicionarRegistro = async (novoRegistro) => {
+            try {
+                await addDoc(collection(db, collectionName), novoRegistro);
+                carregarDados();
+            } catch (e) { console.error("Erro ao adicionar documento: ", e); }
+        };
+
+        const deletarRegistro = async (id) => {
+            if (!confirm('Tem certeza que deseja excluir este registro?')) return;
+            await deleteDoc(doc(db, collectionName, id));
+            carregarDados();
+        };
+
+        const atualizarRegistro = async (id, dadosAtualizados) => {
+            try {
+                const docRef = doc(db, collectionName, id);
+                await updateDoc(docRef, dadosAtualizados);
+                closeEditModal();
+                carregarDados();
+            } catch (e) {
+                console.error("Erro ao atualizar documento: ", e);
+                alert("Falha ao salvar as alterações.");
+            }
+        };
+
+        // --- UI LOGIC & RENDERING ---
+        const renderTable = () => {
+            const searchTerm = searchFilterInput.value.toLowerCase();
+            const filteredData = dataStore.filter(rowData => {
+                return Object.values(rowData).some(value => 
+                    String(value).toLowerCase().includes(searchTerm)
+                );
+            });
+
+            tableBody.innerHTML = '';
+            tableFooter.innerHTML = '';
+            
+            if (filteredData.length === 0) {
+                noDataMessage.textContent = 'Nenhum registro encontrado.';
+                noDataMessage.style.display = 'block';
+            } else {
+                noDataMessage.style.display = 'none';
+                let totalValor = 0;
+                filteredData.forEach((rowData, index) => {
+                    const row = document.createElement('tr');
+                    const formatDate = (dateStr) => dateStr ? new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+                    totalValor += parseFloat(rowData.valor) || 0;
+                    
+                    // Formata a idade para exibição
+                    let idadeDisplay = '';
+                    if (rowData.idadeFalecido) {
+                        idadeDisplay = `${rowData.idadeFalecido} ${rowData.idadeUnidade || 'ANOS'}`;
+                    }
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 font-bold">${index + 1}</td>
+                        <td class="px-6 py-4">${rowData.numeroRegistro || ''}</td>
+                        <td class="px-6 py-4">${rowData.tipo}</td>
+                        <td class="px-6 py-4">${rowData.origemSolicitacao}</td>
+                        <td class="px-6 py-4">${formatDate(rowData.dataSolicitacao)}</td>
+                        <td class="px-6 py-4">${rowData.requerente}</td>
+                        <td class="px-6 py-4">${rowData.falecido}</td>
+                        <td class="px-6 py-4">${idadeDisplay}</td>
+                        <td class="px-6 py-4">
+                            <button data-id="${rowData.id}" class="text-blue-600 hover:text-blue-900 edit-btn mr-2">Editar</button>
+                            <button data-id="${rowData.id}" class="text-red-600 hover:text-red-900 delete-btn">Excluir</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                const footerRow = document.createElement('tr');
+                footerRow.innerHTML = `
+                    <td class="px-6 py-4 text-right font-bold" colspan="8">Total de Solicitações: ${filteredData.length}</td>
+                    <td class="px-6 py-4 font-bold" colspan="1">Soma Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                `;
+                tableFooter.appendChild(footerRow);
+            }
+            document.getElementById('export-urna').disabled = !dataStore.some(d => d.tipo === 'Urna');
+            document.getElementById('export-translado').disabled = !dataStore.some(d => d.tipo === 'Translado');
+            printUrnaBtn.disabled = !dataStore.some(d => d.tipo === 'Urna');
+            printTransladoBtn.disabled = !dataStore.some(d => d.tipo === 'Translado');
+        };
+
+        searchFilterInput.addEventListener('input', renderTable);
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const valorNumerico = parseFloat(valorInput.value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
+            const tipoSelecionado = form.tipo.value;
+            
+            const novoRegistro = {
+                tipo: tipoSelecionado,
+                origemSolicitacao: form['origem-solicitacao'].value,
+                numeroRegistro: form['numero-registro'].value,
+                dataSolicitacao: form['data-solicitacao'].value,
+                requerente: form.requerente.value,
+                cpfRequerente: form['cpf-requerente'].value,
+                telefoneRequerente: form['telefone-requerente'].value,
+                falecido: form.falecido.value,
+                bairroFalecido: form['bairro-falecido'].value,
+                idadeFalecido: tipoSelecionado === 'Urna' ? idadeFalecidoInput.value : '',
+                idadeUnidade: tipoSelecionado === 'Urna' ? idadeUnidadeSelect.value : '',
+                tipoDocumentoFalecido: form['tipo-documento-falecido'].value,
+                documentoFalecido: form['documento-falecido'].value,
+                dataObito: form['data-obito'].value,
+                onibus: tipoSelecionado === 'Translado' ? onibusInput.value : '0',
+                valor: isNaN(valorNumerico) ? 0 : valorNumerico
+            };
+            adicionarRegistro(novoRegistro);
+            form.reset();
+            handleTipoChange(); // Reseta a visibilidade dos campos
+        });
+
+        tableBody.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                deletarRegistro(e.target.getAttribute('data-id'));
+            }
+            if (e.target.classList.contains('edit-btn')) {
+                openEditModal(e.target.getAttribute('data-id'));
+            }
+        });
+        
+        // --- EDIT MODAL LOGIC ---
+        const openEditModal = (id) => {
+            const record = dataStore.find(r => r.id === id);
+            if (!record) return;
+
+            currentEditingId = id;
+            const formHtml = document.getElementById('data-form').innerHTML;
+            editFormContainer.innerHTML = formHtml;
+            
+            const editForm = editFormContainer;
+            const submitButtonContainer = editForm.querySelector('button[type="submit"]').parentElement;
+            if(submitButtonContainer) {
+                submitButtonContainer.remove();
+            }
+
+            // Seletores para o formulário de edição
+            const editOrigemSelect = editForm.querySelector('#origem-solicitacao');
+            const editIdadeContainer = editForm.querySelector('#idade-container');
+            const editIdadeInput = editForm.querySelector('#idade-falecido');
+            const editIdadeUnidade = editForm.querySelector('#idade-unidade');
+            const editOnibusContainer = editForm.querySelector('#onibus-container');
+            const editOnibusInput = editForm.querySelector('#onibus');
+            const editValorInput = editForm.querySelector('#valor');
+
+            const handleEditTipoChange = () => {
+                const tipoSelecionado = editForm.querySelector('input[name="tipo"]:checked')?.value;
+                 if (tipoSelecionado === 'Urna') {
+                    editOrigemSelect.innerHTML = '<option>UPA ITINGA</option><option>SEMDESC</option>';
+                    editOrigemSelect.disabled = false;
+                    editIdadeContainer.classList.remove('hidden');
+                    editOnibusContainer.classList.add('hidden');
+                } else if (tipoSelecionado === 'Translado') {
+                    editOrigemSelect.innerHTML = '<option selected>SEMDESC</option>';
+                    editOrigemSelect.disabled = true;
+                    editIdadeContainer.classList.add('hidden');
+                    editOnibusContainer.classList.remove('hidden');
+                }
+            };
+            
+            editForm.querySelectorAll('input[name="tipo"]').forEach(radio => radio.addEventListener('change', handleEditTipoChange));
+
+            editForm.querySelector(`input[name="tipo"][value="${record.tipo}"]`).checked = true;
+            handleEditTipoChange(); // Aplica a lógica de visibilidade inicial
+            
+            editOrigemSelect.value = record.origemSolicitacao;
+            editForm.querySelector('#numero-registro').value = record.numeroRegistro || '';
+            editForm.querySelector('#data-solicitacao').value = record.dataSolicitacao || '';
+            editForm.querySelector('#requerente').value = record.requerente || '';
+            editForm.querySelector('#cpf-requerente').value = record.cpfRequerente || '';
+            editForm.querySelector('#telefone-requerente').value = record.telefoneRequerente || '';
+            editForm.querySelector('#falecido').value = record.falecido || '';
+            editForm.querySelector('#bairro-falecido').value = record.bairroFalecido || '';
+            
+            editIdadeInput.value = record.idadeFalecido || '';
+            editIdadeUnidade.value = record.idadeUnidade || 'ANOS';
+
+            editForm.querySelector('#tipo-documento-falecido').value = record.tipoDocumentoFalecido || '';
+            editForm.querySelector('#documento-falecido').value = record.documentoFalecido || '';
+            editForm.querySelector('#data-obito').value = record.dataObito || '';
+            editOnibusInput.value = record.onibus || '0';
+            editValorInput.value = (record.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            editValorInput.addEventListener('input', () => formatCurrency(editValorInput));
+
+            editModal.classList.remove('hidden');
+        };
+
+        const closeEditModal = () => {
+            currentEditingId = null;
+            editModal.classList.add('hidden');
+            editFormContainer.innerHTML = '';
+        };
+
+        saveEditBtn.addEventListener('click', () => {
+            if (!currentEditingId) return;
+            const editForm = editFormContainer;
+            const valorNumerico = parseFloat(editForm.querySelector('#valor').value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
+            const tipoSelecionado = editForm.querySelector('input[name="tipo"]:checked').value;
+            const dadosAtualizados = {
+                tipo: tipoSelecionado,
+                origemSolicitacao: editForm.querySelector('#origem-solicitacao').value,
+                numeroRegistro: editForm.querySelector('#numero-registro').value,
+                dataSolicitacao: editForm.querySelector('#data-solicitacao').value,
+                requerente: editForm.querySelector('#requerente').value,
+                cpfRequerente: editForm.querySelector('#cpf-requerente').value,
+                telefoneRequerente: editForm.querySelector('#telefone-requerente').value,
+                falecido: editForm.querySelector('#falecido').value,
+                bairroFalecido: editForm.querySelector('#bairro-falecido').value,
+                idadeFalecido: tipoSelecionado === 'Urna' ? editForm.querySelector('#idade-falecido').value : '',
+                idadeUnidade: tipoSelecionado === 'Urna' ? editForm.querySelector('#idade-unidade').value : '',
+                tipoDocumentoFalecido: editForm.querySelector('#tipo-documento-falecido').value,
+                documentoFalecido: editForm.querySelector('#documento-falecido').value,
+                dataObito: editForm.querySelector('#data-obito').value,
+                onibus: tipoSelecionado === 'Translado' ? editForm.querySelector('#onibus').value : '0',
+                valor: isNaN(valorNumerico) ? 0 : valorNumerico
+            };
+            atualizarRegistro(currentEditingId, dadosAtualizados);
+        });
+
+        cancelEditBtn.addEventListener('click', closeEditModal);
+
+
+        // --- MASKS AND FORMATTING ---
+        const formatCurrency = (input) => {
+            let value = input.value.replace(/\D/g, '');
+            value = (value / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            input.value = value;
+        };
+        valorInput.addEventListener('input', () => formatCurrency(valorInput));
+
+        const applyMask = (event) => {
+            let value = event.target.value.replace(/\D/g, '');
+            const inputId = event.target.id;
+            if (inputId === 'cpf-requerente' || (inputId === 'documento-falecido' && tipoDocumentoFalecidoSelect.value === 'CPF')) {
+                value = value.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                event.target.value = value.slice(0, 14);
+            } else if (inputId === 'telefone-requerente') {
+                value = value.replace(/^(\d{2})(\d)/g, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2');
+                event.target.value = value.slice(0, 15);
+            } else if (inputId === 'numero-registro') {
+                event.target.value = value;
+            }
+        };
+        
+        const formatNames = (event) => {
+            let value = event.target.value.replace(/[^a-zA-Z\u00C0-\u017F\s]/g, '');
+            event.target.value = value.toUpperCase();
+        };
+
+        ['cpf-requerente', 'telefone-requerente', 'documento-falecido', 'numero-registro'].forEach(id => document.getElementById(id).addEventListener('input', applyMask));
+        ['requerente', 'falecido'].forEach(id => document.getElementById(id).addEventListener('input', formatNames));
+        
+        tipoDocumentoFalecidoSelect.addEventListener('change', () => {
+            documentoFalecidoInput.value = '';
+            documentoFalecidoInput.placeholder = tipoDocumentoFalecidoSelect.value === 'CPF' ? '000.000.000-00' : 'Apenas números';
+        });
+
+        const handleTipoChange = () => {
+            const tipoSelecionado = document.querySelector('input[name="tipo"]:checked')?.value;
+            if (tipoSelecionado === 'Urna') {
+                origemSelect.innerHTML = '<option>UPA ITINGA</option><option>SEMDESC</option>';
+                origemSelect.disabled = false;
+                idadeContainer.classList.remove('hidden');
+                onibusContainer.classList.add('hidden');
+            } else if (tipoSelecionado === 'Translado') {
+                origemSelect.innerHTML = '<option selected>SEMDESC</option>';
+                origemSelect.disabled = true;
+                idadeContainer.classList.add('hidden');
+                onibusContainer.classList.remove('hidden');
+            } else { // Nenhum selecionado
+                 origemSelect.innerHTML = '';
+                 idadeContainer.classList.add('hidden');
+                 onibusContainer.classList.add('hidden');
+            }
+        };
+        tipoRadios.forEach(radio => radio.addEventListener('change', handleTipoChange));
+        
+        // --- REPORTING LOGIC ---
+        const getFilteredData = () => {
+            const monthFilter = document.getElementById('month-filter');
+            const yearFilter = document.getElementById('year-filter');
+            const selectedMonth = parseInt(monthFilter.value, 10);
+            const selectedYear = parseInt(yearFilter.value, 10);
+
+            if (!selectedYear || selectedYear.toString().length !== 4) {
+                alert('Por favor, insira um ano válido com 4 dígitos.');
+                return null;
+            }
+
+            const dataToProcess = dataStore.filter(row => {
+                if (!row.dataSolicitacao) return false;
+                const rowDate = new Date(row.dataSolicitacao + 'T00:00:00');
+                return rowDate.getMonth() + 1 === selectedMonth && rowDate.getFullYear() === selectedYear;
+            });
+
+            return { data: dataToProcess, month: selectedMonth, year: selectedYear };
+        };
+
+        const exportToXLSX = (tipo) => {
+            const filteredResult = getFilteredData();
+            if (!filteredResult) return;
+
+            const { data, month, year } = filteredResult;
+            let dataToExport = data.filter(row => row.tipo === tipo);
+
+            if (dataToExport.length === 0) {
+                alert(`Nenhum registro do tipo "${tipo}" encontrado para ${month}/${year}.`);
+                return;
+            }
+            
+            // Ordena os dados por número de registro (ascendente)
+            dataToExport.sort((a, b) => parseInt(a.numeroRegistro, 10) - parseInt(b.numeroRegistro, 10));
+            
+            const formatDateForExcel = (dateStr) => dateStr ? new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+            let totalValor = 0;
+
+            const mappedData = dataToExport.map((row, index) => {
+                totalValor += parseFloat(row.valor) || 0;
+                let baseData = {
+                    'Nº': index + 1,
+                    'Nº Registro': row.numeroRegistro,
+                    'Data da Solicitação': formatDateForExcel(row.dataSolicitacao),
+                    'Requerente': row.requerente,
+                    'CPF do Requerente': row.cpfRequerente,
+                    'Telefone do Requerente': row.telefoneRequerente,
+                    'Falecido(a)': row.falecido,
+                    'Documento do Falecido': row.documentoFalecido,
+                    'Data do Óbito': formatDateForExcel(row.dataObito),
+                    'Bairro': row.bairroFalecido,
+                    'Valor': row.valor
+                };
+
+                if (tipo === 'Urna') {
+                    baseData['Idade do Falecido'] = row.idadeFalecido ? `${row.idadeFalecido} ${row.idadeUnidade || 'ANOS'}` : '';
+                } else { // Translado
+                    baseData['Qtd. de Ônibus'] = row.onibus;
+                }
+                
+                return baseData;
+            });
+
+            mappedData.push({ 'Nº': '', 'Nº Registro': '', 'Data da Solicitação': 'Total de Solicitações:', 'Requerente': dataToExport.length, 'Valor': totalValor });
+
+            const worksheet = XLSX.utils.json_to_sheet(mappedData);
+            
+            // Define larguras das colunas
+            worksheet['!cols'] = [ {wch:5}, {wch:10}, {wch:20}, {wch:30}, {wch:20}, {wch:20}, {wch:30}, {wch:20}, {wch:20}, {wch:20}, {wch:15}, {wch:15} ];
+            
+            // Formata a coluna de valor como moeda
+            dataToExport.forEach((row, index) => {
+                const cellRef = XLSX.utils.encode_cell({c: (tipo === 'Urna' ? 11 : 10) , r: index + 1});
+                if(worksheet[cellRef]) {
+                    worksheet[cellRef].t = 'n';
+                    worksheet[cellRef].z = 'R$ #,##0.00';
+                }
+            });
+            const totalCellRef = XLSX.utils.encode_cell({c: 4, r: dataToExport.length + 1});
+            if(worksheet[totalCellRef]) {
+                 worksheet[totalCellRef].t = 'n';
+                 worksheet[totalCellRef].z = 'R$ #,##0.00';
+            }
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, tipo);
+            XLSX.writeFile(workbook, `Relatorio_${tipo}_${month}-${year}.xlsx`);
+        };
+
+        const generateColumnWidths = (tipo) => {
+            // CSS com larguras fixas em pixels para garantir alinhamento perfeito.
+            let base_css = `
+                th:nth-child(1), td:nth-child(1) { width: 35px; }   /* Nº */
+                th:nth-child(2), td:nth-child(2) { width: 60px; }   /* Nº Reg. */
+                th:nth-child(3), td:nth-child(3) { width: 90px; }   /* Origem */
+                th:nth-child(4), td:nth-child(4) { width: 90px; }   /* Data Solicitação */
+                th:nth-child(5), td:nth-child(5) { width: 150px; }  /* Requerente */
+                th:nth-child(6), td:nth-child(6) { width: 110px; }  /* CPF */
+                th:nth-child(7), td:nth-child(7) { width: 110px; }  /* Telefone */
+                th:nth-child(8), td:nth-child(8) { width: 150px; }  /* Falecido(a) */
+                th:nth-child(9), td:nth-child(9) { width: 110px; }  /* Documento */
+            `;
+            if (tipo === 'Urna') {
+                return base_css + `
+                    th:nth-child(10), td:nth-child(10) { width: 60px; }   /* Idade */
+                    th:nth-child(11), td:nth-child(11) { width: 90px; } /* Data Óbito */
+                    th:nth-child(12), td:nth-child(12) { width: 90px; } /* Bairro */
+                    th:nth-child(13), td:nth-child(13) { width: 80px; }  /* Valor */
+                `;
+            } else { // Translado
+                return base_css + `
+                    th:nth-child(10), td:nth-child(10) { width: 90px; }  /* Data Óbito */
+                    th:nth-child(11), td:nth-child(11) { width: 90px; } /* Bairro */
+                    th:nth-child(12), td:nth-child(12) { width: 60px; }  /* Ônibus */
+                    th:nth-child(13), td:nth-child(13) { width: 80px; }  /* Valor */
+                `;
+            }
+        };
+
+        const printReport = (tipo) => {
+            const filteredResult = getFilteredData();
+            if (!filteredResult) return;
+            
+            const { data, month, year } = filteredResult;
+            let dataToPrint = data.filter(row => row.tipo === tipo);
+
+            if (dataToPrint.length === 0) {
+                alert(`Nenhum registro do tipo "${tipo}" encontrado para ${month}/${year} para imprimir.`);
+                return;
+            }
+            
+            // Ordena os dados por número de registro (ascendente)
+            dataToPrint.sort((a, b) => parseInt(a.numeroRegistro, 10) - parseInt(b.numeroRegistro, 10));
+
+            const monthNames = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
+            const monthName = monthNames[month - 1];
+            let totalValor = 0;
+            dataToPrint.forEach(row => totalValor += parseFloat(row.valor) || 0); // Calcula o total geral
+
+            const printWindow = window.open('', '', 'height=600,width=800');
+            
+            const chunkArray = (array, size) => {
+                const chunks = [];
+                for (let i = 0; i < array.length; i += size) {
+                    chunks.push(array.slice(i, i + size));
+                }
+                return chunks;
+            };
+
+            const itemsPerPage = 15; 
+            const chunks = chunkArray(dataToPrint, itemsPerPage);
+            let tablesHTML = '';
+
+            let headers = ['Nº', 'Nº Reg.', 'Origem', 'Data da Solicitação', 'Requerente', 'CPF do Requerente', 'Telefone', 'Falecido(a)', 'Documento do Falecido'];
+            if (tipo === 'Urna') {
+                 headers.push('Idade');
+            }
+            headers.push('Data do Óbito', 'Bairro');
+            if (tipo === 'Translado') {
+                headers.push('Ônibus');
+            }
+            headers.push('Valor');
+
+            chunks.forEach((chunk, pageIndex) => {
+                let rowsHTML = '';
+                chunk.forEach((row, index) => {
+                    let rowHTML = `
+                        <tr>
+                            <td>${pageIndex * itemsPerPage + index + 1}</td>
+                            <td>${row.numeroRegistro || ''}</td>
+                            <td>${row.origemSolicitacao || ''}</td>
+                            <td>${row.dataSolicitacao ? new Date(row.dataSolicitacao + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
+                            <td>${row.requerente || ''}</td>
+                            <td>${row.cpfRequerente || ''}</td>
+                            <td>${row.telefoneRequerente || ''}</td>
+                            <td>${row.falecido || ''}</td>
+                            <td>${row.documentoFalecido || ''}</td>
+                    `;
+                    if (tipo === 'Urna') {
+                        rowHTML += `<td>${row.idadeFalecido ? row.idadeFalecido + ' ' + (row.idadeUnidade || 'ANOS') : ''}</td>`;
+                    }
+                    rowHTML += `
+                        <td>${row.dataObito ? new Date(row.dataObito + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
+                        <td>${row.bairroFalecido || ''}</td>
+                    `;
+                    if (tipo === 'Translado') {
+                        rowHTML += `<td>${row.onibus || '0'}</td>`;
+                    }
+                    rowHTML += `
+                            <td>${(row.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                        </tr>
+                    `;
+                    rowsHTML += rowHTML;
+                });
+
+                tablesHTML += `
+                    <table>
+                        <thead>
+                            <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+                        </thead>
+                        <tbody>${rowsHTML}</tbody>
+                        ${pageIndex === chunks.length - 1 ? `
+                            <tfoot>
+                                <tr>
+                                    <td colspan="${headers.length - 1}" style="text-align: right;">Total de Solicitações: ${dataToPrint.length}</td>
+                                    <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                </tr>
+                            </tfoot>
+                        ` : ''}
+                    </table>
+                    ${pageIndex < chunks.length - 1 ? '<div style="page-break-after: always;"></div>' : ''}
+                `;
+            });
+
+
+            const fullHtml = `
+                <html>
+                    <head>
+                        <title>Relatório de Solicitações - ${tipo}</title>
+                        <style>
+                            @page { 
+                                size: landscape; 
+                                margin: 1cm; 
+                            }
+                            body { 
+                                font-family: Arial, sans-serif; 
+                            }
+                            .report-header { 
+                                height: 4cm; 
+                                text-align: center;
+                            }
+                            .report-header img { 
+                                height: 2.86cm; 
+                                width: 21.59cm; 
+                                object-fit: contain; 
+                            }
+                            .report-title { 
+                                font-size: 14px; 
+                                font-weight: bold; 
+                            }
+                            table { 
+                                width: 100%; 
+                                border-collapse: collapse; 
+                                table-layout: fixed; 
+                                page-break-inside: avoid;
+                            }
+                            thead { display: table-header-group; } 
+                            tfoot { display: table-row-group; } 
+                            th, td { 
+                                border: 1px solid #ddd; 
+                                padding: 8px; 
+                                text-align: center; 
+                                font-size: 11px; 
+                                white-space: normal;
+                                word-wrap: break-word; 
+                                height: 2.5em; 
+                                vertical-align: middle; 
+                            }
+                            th { background-color: #f2f2f2; }
+                            tfoot { font-weight: bold; }
+                            
+                            ${generateColumnWidths(tipo)}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="report-header">
+                            <img src="logo.png" alt="Logo">
+                            <div class="report-title">Relatório de Solicitações de ${tipo.toUpperCase()} - ${monthName}/${year}</div>
+                        </div>
+                        ${tablesHTML}
+                    </body>
+                </html>`;
+
+            printWindow.document.write(fullHtml);
+            printWindow.document.close();
+            printWindow.onload = function() {
+                printWindow.focus();
+                printWindow.print();
+            };
+        };
+        
+        document.getElementById('export-urna').addEventListener('click', () => exportToXLSX('Urna'));
+        document.getElementById('export-translado').addEventListener('click', () => exportToXLSX('Translado'));
+        printUrnaBtn.addEventListener('click', () => printReport('Urna'));
+        printTransladoBtn.addEventListener('click', () => printReport('Translado'));
+        
+        const setInitialDateFilters = () => {
+            const today = new Date();
+            document.getElementById('month-filter').value = today.getMonth() + 1;
+            document.getElementById('year-filter').value = today.getFullYear();
+        };
+        setInitialDateFilters();
+        handleTipoChange(); 
     </script>
 </body>
 </html>
+
