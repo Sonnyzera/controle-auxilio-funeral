@@ -431,7 +431,28 @@
 
         saveEditBtn.addEventListener('click', () => {
             if (!currentEditingId) return;
+
             const editForm = editFormContainer;
+
+            // Validação manual dos campos obrigatórios no modal
+            const requiredFields = editForm.querySelectorAll('[required]');
+            let allFieldsValid = true;
+            
+            requiredFields.forEach(field => {
+                field.style.borderColor = ''; // Reseta a cor da borda
+                if (!field.value) {
+                    allFieldsValid = false;
+                    field.style.borderColor = 'red'; // Destaca o campo inválido
+                }
+            });
+
+            if (!allFieldsValid) {
+                // Se preferir, pode mostrar uma mensagem de erro mais explícita aqui.
+                // Por enquanto, apenas o destaque visual é implementado.
+                console.error("Por favor, preencha todos os campos obrigatórios.");
+                return; // Impede o salvamento
+            }
+
             const valorNumerico = parseFloat(editForm.querySelector('#valor').value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
             const tipoSelecionado = editForm.querySelector('input[name="tipo"]:checked').value;
             const dadosAtualizados = {
@@ -650,8 +671,15 @@
 
             const monthNames = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
             const monthName = monthNames[month - 1];
+            
             let totalValor = 0;
-            dataToPrint.forEach(row => totalValor += parseFloat(row.valor) || 0);
+            let totalOnibus = 0;
+            dataToPrint.forEach(row => {
+                totalValor += parseFloat(row.valor) || 0;
+                if (tipo === 'Translado') {
+                    totalOnibus += parseInt(row.onibus, 10) || 0;
+                }
+            });
 
             const printWindow = window.open('', '', 'height=600,width=800');
             
@@ -695,18 +723,36 @@
                 rowsHTML += `<tr>${cells.join('')}</tr>`;
             });
 
-            const tableHTML = `
-                <table>
-                    <thead>
-                        <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
-                    </thead>
-                    <tbody>${rowsHTML}</tbody>
+            let footerHTML = '';
+            if (tipo === 'Translado') {
+                footerHTML = `
+                    <tfoot>
+                        <tr>
+                            <td colspan="${headers.length - 3}" style="text-align: right; font-weight: bold;">Total de Solicitações:</td>
+                            <td style="font-weight: bold;">${dataToPrint.length}</td>
+                            <td style="font-weight: bold;">${totalOnibus}</td>
+                            <td style="font-weight: bold;">${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                        </tr>
+                    </tfoot>
+                `;
+            } else { // Urna
+                footerHTML = `
                     <tfoot>
                         <tr>
                             <td colspan="${headers.length - 1}" style="text-align: right;">Total de Solicitações: ${dataToPrint.length}</td>
                             <td>${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                         </tr>
                     </tfoot>
+                `;
+            }
+
+            const tableHTML = `
+                <table>
+                    <thead>
+                        <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>${rowsHTML}</tbody>
+                    ${footerHTML}
                 </table>
             `;
 
